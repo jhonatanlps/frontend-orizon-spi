@@ -1,0 +1,153 @@
+:root {
+    --bg-main: #f3f5f9;
+    --bg-sidebar: #0f172a;
+    --bg-card: #ffffff;
+    --primary: #5243e3;
+    --primary-hover: #4333d3;
+    --cyan-btn: #38bdf8;
+    --cyan-btn-hover: #0284c7;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --border-focus: #42b7e8;
+
+
+    /* Colors for Status Badges */
+    --status-active-bg: #dcfce7;
+    --status-active-text: #16a34a;
+    --status-maint-bg: #fef08a;
+    --status-maint-text: #ca8a04;
+    --status-inact-bg: #fee2e2;
+    --status-inact-text: #dc2626;
+
+    --action-edit: #475569;
+    --action-delete: #ef4444;
+
+    --danger-main: #ef4444;
+    --danger-light: #fee2e2;
+    --success-main: #16a34a;
+    --success-btn: #2f8546;
+    --success-btn-hover: #226b34;
+
+    --cyan: #06b6d4;
+    --green: #10b981;
+    --chart-cyan: #00b4d8;
+    --chart-dark: #111827;
+
+    /* Colors for Status Badges */
+    --status-baixo-bg: #dcfce7;
+    --status-baixo-text: #16a34a;
+    --status-medio-bg: #fef08a;
+    --status-medio-text: #ca8a04;
+    --status-critico-bg: #fee2e2;
+    --status-critico-text: #dc2626;
+
+    --primary-light: #eef2ff;
+    --primary-text: #3730a3;
+    
+    --input-bg: #fafafa;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+
+}
+
+.layout-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 240px;
+    background-color: var(--bg-sidebar);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 0;
+    flex-shrink: 0;
+}
+
+.sidebar-logo {
+    height: 115px;
+
+    padding: 25px 30px;
+
+    border-bottom: 1px solid #707070;
+}
+
+
+.sidebar-logo img {
+    width: 130px;
+    height: auto;
+}
+
+
+.sidebar-logo span {
+    display: block;
+
+    color: #777f91;
+
+    font-size: 12px;
+
+    margin-top: 2px;
+}
+
+.nav-menu {
+    list-style: none;
+    margin-top: 24px;
+    padding: 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-item a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.nav-item a:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.active a {
+    background-color: var(--primary);
+    color: #ffffff;
+}
+
+.sidebar-footer {
+    padding: 16px 24px 0 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.logout-btn:hover {
+    color: #ffffff;
+}
