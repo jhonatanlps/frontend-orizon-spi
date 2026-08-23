@@ -1,18 +1,104 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { Settings, HardHat, Box, AlertTriangle, LogOut, MapPin, SquarePen, Plus} from 'lucide-vue-next';
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { Settings, HardHat, Box, AlertTriangle, LogOut, MapPin, Trash2, Plus} from 'lucide-vue-next';
+import axios from 'axios';
+import { conectarWebSocket, desconectarWebSocket } from '../services/WebSocket';
 
-const email = ref('')
-const senha = ref('')
-const router = useRouter()
+const carregando = ref(false)
+const maquinas = ref([])
+const epis = ref([])
+const zonas = ref([])
 
-function handleLogin() {
-  // Lógica que estava no seu script.js
-  if (email.value && senha.value) {
-    router.push('/supervisor') // Redireciona para o painel
-  }
+const qtdEpis = computed(() => {
+    return epis.value.length
+})
+
+const qtdMaquinas = computed(() => {
+    return maquinas.value.length
+})
+
+const qtdZona = computed(() => {
+    return zonas.value.length
+})
+
+async function buscarMaquinas() {
+    carregando.value = true
+    try {
+        const resposta = await axios.get('/api/maquina')
+
+        maquinas.value = resposta.data
+        
+    } catch (error) {
+        console.error("Erro ao buscar maquinas ", maquinas)
+    } finally {
+        carregando.value = false
+    }
 }
+
+async function buscarEpis() {
+    carregando.value = true
+    try {
+        const resposta = await axios.get('/api/epi')
+
+        epis.value = resposta.data
+        
+    } catch (error) {
+        console.error("Erro ao buscar epis ", epis)
+    } finally {
+        carregando.value = false
+    }
+    
+}
+
+async function buscarZonas() {
+    carregando.value = true
+    try {
+        const resposta = await axios.get('/api/zona')
+
+        zonas.value = resposta.data
+        
+    } catch (error) {
+        console.error("Erro ao buscar zonas ", zonas)
+    } finally {
+        carregando.value = false
+    }
+}
+
+onMounted(() => {
+    buscarEpis()
+    buscarMaquinas()
+    buscarZonas()
+
+    console.log("conectando no web socket")
+
+    conectarWebSocket({
+        
+        onEpi: (epi) => {
+            
+            console.log('EPI recebido:', epi)
+
+            return epis.value.unshift(epi)
+        },
+        onZona: (zona) => {
+
+            console.log('Zona recebido:', zona)
+
+            return zonas.value.unshift(zona)
+        },
+        onMaquina: (maquina) => {
+
+            console.log('Maquina recebido:', maquina)
+
+            return maquinas.value.unshift(maquina)
+        }
+    })
+
+})
+
+onUnmounted(() => {
+    desconectarWebSocket()
+})
+
 </script>
 
 <template>
@@ -62,7 +148,7 @@ function handleLogin() {
                 </div>
                 <div class="metric-info">
                     <span class="metric-label">Máquinas Cadastradas</span>
-                    <span class="metric-value">4</span>
+                    <span class="metric-value">{{ qtdMaquinas }}</span>
                 </div>
                 </div>
 
@@ -72,7 +158,7 @@ function handleLogin() {
                 </div>
                 <div class="metric-info">
                     <span class="metric-label">EPIs Disponíveis</span>
-                    <span class="metric-value">4</span>
+                    <span class="metric-value">{{ qtdEpis }}</span>
                 </div>
                 </div>
 
@@ -81,8 +167,8 @@ function handleLogin() {
                     <MapPin />
                 </div>
                 <div class="metric-info">
-                    <span class="metric-label">Áreas Monitoradas</span>
-                    <span class="metric-value">3</span>
+                    <span class="metric-label">Zonas Monitoradas</span>
+                    <span class="metric-value">{{ qtdZona }}</span>
                 </div>
                 </div>
             </div>
@@ -91,9 +177,9 @@ function handleLogin() {
             <div class="card">
                 <div class="card-header-flex">
                 <h2 class="card-title">Gestão de Máquinas</h2>
-                <button class="btn btn-purple">
+                <a href="/config-maquina" class="btn btn-purple">
                     <Plus :size="16" /> Nova Máquina
-                </button>
+                </a>
                 </div>
 
                 <div class="table-container">
@@ -102,57 +188,18 @@ function handleLogin() {
                     <tr>
                         <th>Máquina</th>
                         <th>Área</th>
-                        <th>Status</th>
-                        <th>Última Manutenção</th>
+                        <th>Descrição</th>
                         <th>Ações</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td class="machine-name">Prensa Hidráulica 01</td>
-                        <td>Setor A</td>
-                        <td><span class="badge badge-ativo">Ativo</span></td>
-                        <td>05/06/2026</td>
+                    <tr v-for="maquina in maquinas" :key="maquina.id_maquina">
+                        <td class="machine-name">{{ maquina.nome }}</td>
+                        <td>{{ maquina.setor }}</td>
+                        <td>{{ maquina.descricao }}</td>
                         <td>
                         <div class="action-btns">
-                            <button class="action-btn edit" title="Editar"><i data-lucide="square-pen" size="18"></i></button>
-                            <button class="action-btn delete" title="Excluir"><i data-lucide="trash-2" size="18"></i></button>
-                        </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="machine-name">Torno CNC 03</td>
-                        <td>Setor B</td>
-                        <td><span class="badge badge-manutencao">Manutenção</span></td>
-                        <td>08/06/2026</td>
-                        <td>
-                        <div class="action-btns">
-                            <button class="action-btn edit" title="Editar"><i data-lucide="square-pen" size="18"></i></button>
-                            <button class="action-btn delete" title="Excluir"><i data-lucide="trash-2" size="18"></i></button>
-                        </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="machine-name">Esteira Transportadora 02</td>
-                        <td>Setor A</td>
-                        <td><span class="badge badge-ativo">Ativo</span></td>
-                        <td>01/06/2026</td>
-                        <td>
-                        <div class="action-btns">
-                            <button class="action-btn edit" title="Editar"><i data-lucide="square-pen" size="18"></i></button>
-                            <button class="action-btn delete" title="Excluir"><i data-lucide="trash-2" size="18"></i></button>
-                        </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="machine-name">Compressor Industrial 05</td>
-                        <td>Setor C</td>
-                        <td><span class="badge badge-inativo">Inativo</span></td>
-                        <td>10/05/2026</td>
-                        <td>
-                        <div class="action-btns">
-                            <button class="action-btn edit" title="Editar"><i data-lucide="square-pen" size="18"></i></button>
-                            <button class="action-btn delete" title="Excluir"><i data-lucide="trash-2" size="18"></i></button>
+                            <button class="action-btn delete" title="Excluir"> <Trash2 :size="18" /></button>
                         </div>
                         </td>
                     </tr>
@@ -166,105 +213,21 @@ function handleLogin() {
 
                     <div class="card-header-flex">
                         <h2 class="card-title">Gestão de EPIs</h2>
-                        <button class="btn btn-cyan">
+                        <a href="/cadastro-epi" class="btn btn-cyan">
                             <Plus :size="16" /> Nova EPI
-                        </button>
+                        </a>
                     </div>
 
                     <div class="epi-cards-grid">
                         <!-- EPI Item 1 -->
-                        <div class="epi-item-card">
+                        <div v-for="epi in epis" class="epi-item-card">
                             <div class="epi-card-header">
                                 <div>
-                                    <div class="epi-name">Capacete de Segurança</div>
-                                    <div class="epi-desc">Proteção Craniana</div>
+                                    <div class="epi-name">{{ epi.nome }}</div>
+                                    <div class="epi-desc">{{ epi.descricao }}</div>
                                 </div>
                                 <div class="action-btns">
-                                    <button class="action-btn edit"><i data-lucide="square-pen" size="18"></i></button>
-                                    <button class="action-btn delete"><i data-lucide="trash-2" size="18"></i></button>
-                                </div>
-                            </div>
-
-                            <div class="epi-metrics">
-                                <div class="epi-metric-box">
-                                    <label>Quantidade</label>
-                                    <div class="val green">45</div>
-                                </div>
-                                <div class="epi-metric-box" style="text-align: right;">
-                                    <label>Mínimo</label>
-                                    <div class="val dark">30</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- EPI Item 2 -->
-                        <div class="epi-item-card">
-                            <div class="epi-card-header">
-                                <div>
-                                    <div class="epi-name">Luvas de Proteção Química</div>
-                                    <div class="epi-desc">Proteção das Mãos</div>
-                                </div>
-                                <div class="action-btns">
-                                    <button class="action-btn edit"><i data-lucide="square-pen" size="18"></i></button>
-                                    <button class="action-btn delete"><i data-lucide="trash-2" size="18"></i></button>
-                                </div>
-                            </div>
-                            <div class="epi-metrics">
-                                <div class="epi-metric-box">
-                                    <label>Quantidade</label>
-                                    <div class="val green">27</div>
-                                </div>
-                                <div class="epi-metric-box" style="text-align: right;">
-                                    <label>Mínimo</label>
-                                    <div class="val dark">25</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- EPI Item 3 -->
-                        <div class="epi-item-card">
-                            <div class="epi-card-header">
-                                <div>
-                                    <div class="epi-name">Óculos de Proteção</div>
-                                    <div class="epi-desc">Proteção Visual</div>
-                                </div>
-                                <div class="action-btns">
-                                    <button class="action-btn edit"><i data-lucide="square-pen" size="18"></i></button>
-                                    <button class="action-btn delete"><i data-lucide="trash-2" size="18"></i></button>
-                                </div>
-                            </div>
-                            <div class="epi-metrics">
-                                <div class="epi-metric-box">
-                                    <label>Quantidade</label>
-                                    <div class="val green">67</div>
-                                </div>
-                                <div class="epi-metric-box" style="text-align: right;">
-                                    <label>Mínimo</label>
-                                    <div class="val dark">40</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- EPI Item 4 -->
-                        <div class="epi-item-card">
-                            <div class="epi-card-header">
-                                <div>
-                                    <div class="epi-name">Botas de Segurança</div>
-                                    <div class="epi-desc">Proteção dos Pés</div>
-                                </div>
-                                <div class="action-btns">
-                                    <button class="action-btn edit"><i data-lucide="square-pen" size="18"></i></button>
-                                    <button class="action-btn delete"><i data-lucide="trash-2" size="18"></i></button>
-                                </div>
-                            </div>
-                            <div class="epi-metrics">
-                                <div class="epi-metric-box">
-                                    <label>Quantidade</label>
-                                    <div class="val green">38</div>
-                                </div>
-                                <div class="epi-metric-box" style="text-align: right;">
-                                    <label>Mínimo</label>
-                                    <div class="val dark">35</div>
+                                    <button class="action-btn delete"><Trash2 :size="18" /></button>
                                 </div>
                             </div>
                         </div>
@@ -453,6 +416,7 @@ function handleLogin() {
     gap: 6px;
     border: none;
     transition: background-color 0.2s;
+    text-decoration: none;
 }
 
 .btn-purple {

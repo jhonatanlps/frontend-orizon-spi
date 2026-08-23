@@ -1,18 +1,80 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Settings, HardHat, Box, AlertTriangle, LogOut, Clock } from 'lucide-vue-next';
+import axios from 'axios';
+import { conectarWebSocket, desconectarWebSocket } from '../services/WebSocket';
 
-const email = ref('')
-const senha = ref('')
-const router = useRouter()
+const alertasRecentes = ref([])
+const carregando = ref(false)
 
-function handleLogin() {
-  // Lógica que estava no seu script.js
-  if (email.value && senha.value) {
-    router.push('/supervisor') // Redireciona para o painel
-  }
+const qtdAlertasResolvidos = computed(() => {
+                                    return alertasRecentes.value.filter(alerta => alerta.status === 'Resolvido').length
+                                    })
+
+const alertasNaoResolvido = computed(() => { return alertasRecentes.value.filter(alerta => alerta.status != 'Resolvido')})
+
+async function buscarAlertas() {
+    carregando.value = true
+    try {
+        const resposta = await axios.get('/api/alerta')
+
+        console.log('Status:', resposta.status)
+        console.log('Dados:', resposta.data)
+        
+        alertasRecentes.value = resposta.data
+
+        console.log(qtdAlertasResolvidos)
+
+    } catch (error) {
+        console.error("Erro ao buscar o alerta", error)
+    } finally {
+        carregando.value = false
+    }
+    
 }
+
+async function resolverAlerta(id) {
+    try {
+        await axios.put(`/api/alerta/${id}`)
+        buscarAlertas()
+    } catch (error) {
+        console.error("Erro ao resolver ", error)
+    }
+}
+
+function receberAlerta(alerta) {
+
+    console.log('🔥 WebSocket:', alerta)
+
+    const index = alertasRecentes.value.findIndex(
+        a => a.id_alerta === alerta.id_alerta
+    )
+
+    if (index === -1) {
+
+        // Alerta novo
+        alertasRecentes.value.unshift(alerta)
+
+    } else {
+
+        // Alerta já existe, apenas atualiza
+        alertasRecentes.value[index] = alerta
+
+    }
+
+}
+
+onMounted(() => {
+    buscarAlertas()
+    console.log("conectando no websocket...")
+    conectarWebSocket(receberAlerta)
+
+})
+
+onUnmounted(() => {
+    desconectarWebSocket()
+})
+
 </script>
 
 <template>
@@ -35,6 +97,9 @@ function handleLogin() {
                     <li class="nav-item">
                         <a href="/config-maquina"><Box /> Config. Máquina</a>
                     </li>
+                    <li class="nav-item">
+                        <a href="/calibrar-zonas"><AlertTriangle /> Calibracao de zonas</a>
+                    </li>
                     <li class="nav-item active">
                         <a href="/alertas"><AlertTriangle /> Alerta</a>
                     </li>
@@ -49,103 +114,80 @@ function handleLogin() {
         </aside>
 
         <!-- MAIN CONTENT -->
-        <main class="main-content">
-        <header class="page-header">
-            <h1 class="page-title">Alertas do Sistema</h1>
-            <p class="page-subtitle">Monitoramento de alertas críticos e ocorrências</p>
-        </header>
+        <div v-if="carregando">Carregando dados do servidor...</div>
 
-        <!-- METRICS CARDS -->
-        <div class="metrics-grid">
-            <div class="metric-card danger">
-            <div class="metric-label">Alertas</div>
-            <div class="metric-value danger">2</div>
-            </div>
-            
-            <div class="metric-card success">
-            <div class="metric-label">Resolvidos Hoje</div>
-            <div class="metric-value success">1</div>
-            </div>
-        </div>
+        <main v-else class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">Alertas do Sistema</h1>
+                <p class="page-subtitle">Monitoramento de alertas críticos e ocorrências</p>
+            </header>
 
-        <!-- ALERT CARDS LIST -->
-        <div class="alerts-list">
-            <!-- Alert Item 1 -->
-            <div class="alert-card">
-            <div class="alert-icon">
-                <AlertTriangle :size="24" />
-            </div>
-            <div class="alert-body">
-                <div class="alert-title">Maquina Desativada - Setor C</div>
-                <div class="alert-desc">Funcionário detectado sem capacete de segurança na área de risco</div>
-                <div class="alert-machine"><strong>Máquina:</strong> Compressor Industrial 05</div>
-            </div>
-            <div class="alert-actions">
-                <button class="btn-resolve">Resolver</button>
-                <div class="alert-time">
-                <Clock :size="14" /> 10-06-2026 12:30:05
+            <!-- METRICS CARDS -->
+            <div class="metrics-grid">
+                <div class="metric-card danger">
+                    <div class="metric-label">Alertas</div>
+                    <div class="metric-value danger">{{ alertasNaoResolvido.length }}</div>
+                </div>
+                
+                <div class="metric-card success">
+                    <div class="metric-label">Resolvido</div>
+                    <div class="metric-value success">{{ qtdAlertasResolvidos }}</div>
                 </div>
             </div>
-            </div>
 
-            <!-- Alert Item 2 -->
-            <div class="alert-card">
-            <div class="alert-icon">
-                <AlertTriangle :size="24" />
-            </div>
-            <div class="alert-body">
-                <div class="alert-title">Maquina Desativada - Setor B</div>
-                <div class="alert-desc">Funcionário detectado sem óculos de segurança na área de risco</div>
-                <div class="alert-machine"><strong>Máquina:</strong> Torno CNC 03</div>
-                <div class="alert-status-text">Resolvido</div>
-            </div>
-            <div class="alert-actions">
-                <button class="btn-resolve">Resolver</button>
-                <div class="alert-time">
-                <Clock :size="14" /> 10-06-2026 13:45:10
+            <!-- ALERT CARDS LIST -->
+            <div class="alerts-list">
+                <!-- Alert Item 1 -->
+                <div v-for="alerta in alertasNaoResolvido" class="alert-card">
+                    <div class="alert-icon">
+                        <AlertTriangle :size="24" />
+                    </div>
+                    <div class="alert-body">
+                        <div class="alert-title">Maquina desativada - {{ alerta.ocorrencia?.zona?.nome }}</div>
+                        <div class="alert-desc">{{ alerta.mensagem }}</div>
+                        <div class="alert-machine"><strong>Máquina:</strong> {{ alerta.ocorrencia?.zona?.maquina?.nome }}</div>
+                    </div>
+                    <div class="alert-actions">
+                        <button @click="resolverAlerta(alerta.id_alerta)" class="btn-resolve">Resolver</button>
+                        <div class="alert-time">
+                            <Clock :size="14" /> {{ alerta.data_hora }}
+                        </div>
+                    </div>
                 </div>
             </div>
-            </div>
-        </div>
 
-        <!-- INFRAÇÕES RECENTES TABLE -->
-        <div class="table-card">
-            <div class="table-header">
-            <h2 class="table-title">Infrações Recentes</h2>
+            <!-- INFRAÇÕES RECENTES TABLE -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h2 class="table-title">Infrações Recentes</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>Área</th>
+                                <th>Descrição</th>
+                                <th>Data Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody v-for="alerta in alertasRecentes">
+                            <tr>
+                                <td class="table-worker">{{ alerta.ocorrencia?.funcionario?.nome }}</td>
+                                <td>{{ alerta.ocorrencia?.zona?.nome }}</td>
+                                <td>{{ alerta.mensagem }}</td>
+                                <td>{{ alerta.data_hora }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                </div>
             </div>
-            <div class="table-container">
-            <table>
-                <thead>
-                <tr>
-                    <th>Funcionário</th>
-                    <th>Área</th>
-                    <th>Descrição</th>
-                    <th>Data Hora</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td class="table-worker">João Silva</td>
-                    <td>Setor C</td>
-                    <td>EPI não utilizado</td>
-                    <td>10-06-2026 12:30:05</td>
-                </tr>
-                <tr>
-                    <td class="table-worker">Maria Santos</td>
-                    <td>Setor B</td>
-                    <td>EPI não utilizado</td>
-                    <td>10-06-2026 13:45:10</td>
-                </tr>
-                </tbody>
-            </table>
-            </div>
-        </div>
         </main>
     </div>
 </template>
 
 <style scoped>
-/* --- MAIN CONTENT --- */
 /* --- MAIN CONTENT --- */
 .main-content {
     flex: 1;

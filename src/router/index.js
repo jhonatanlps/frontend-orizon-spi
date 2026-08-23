@@ -7,11 +7,13 @@ import ConfigMaquinaView from '../views/ConfigMaquinaView.vue'
 import SupervisorView from '../views/SupervisorView.vue'
 import TecnicoView from '../views/TecnicoView.vue'
 import RelatoriosView from '../views/RelatoriosView.vue'
+import CalibracaoZonasView from '../views/CalibracaoZonasView.vue'
 
 const routes = [
   { path: '/', component: LoginView },
   { path: '/alertas', component: AlertasView },
   { path: '/cadastro-epi', component: CadastroEpiView },
+  { path: '/calibrar-zonas', component: CalibracaoZonasView },
   { path: '/config-maquina', component: ConfigMaquinaView },
   { path: '/supervisor', component: SupervisorView },
   { path: '/tecnico', component: TecnicoView },

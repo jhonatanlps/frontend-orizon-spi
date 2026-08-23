@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@lucide/vue": "^1.33.0",
+    "@stomp/stompjs": "^7.3.0",
+    "axios": "^1.19.0",
     "lucide-vue-next": "^1.0.0",
+    "proxy": "^4.1.0",
     "vue": "^3.5.40",
     "vue-router": "^4.6.4"
   },
