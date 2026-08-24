@@ -2,7 +2,20 @@ import { Client } from '@stomp/stompjs'
 
 let client = null
 
-export function conectarWebSocket({onAlerta, onMaquina, onEpi, onZona} = {}) {
+let callbacks = {
+    onAlerta: null,
+    onMaquina: null,
+    onEpi: null,
+    onZona: null,
+    onQtdStatus: null,
+    onQtdZonas: null
+}
+
+export function conectarWebSocket() {
+
+    if (client) {
+        return
+    }
 
     client = new Client({
         brokerURL: 'ws://localhost:8080/ws',
@@ -14,22 +27,32 @@ export function conectarWebSocket({onAlerta, onMaquina, onEpi, onZona} = {}) {
             client.subscribe('/topic/alerta', (message) => {
                 const alerta = JSON.parse(message.body)
                 console.log('Novo alerta:', alerta)
-                onAlerta?.(alerta)
+                callbacks.onAlerta?.(alerta)
             })
             client.subscribe('/topic/maquina', (message) => {
                 const maquina = JSON.parse(message.body)
                 console.log('Novo maquina:', maquina)
-                onMaquina?.(maquina)
+                callbacks.onMaquina?.(maquina)
             })
             client.subscribe('/topic/epi', (message) => {
                 const epi = JSON.parse(message.body)
                 console.log('Novo epi:', epi)
-                onEpi?.(epi)
+                callbacks.onEpi?.(epi)
             })
             client.subscribe('/topic/zona', (message) => {
                 const zona = JSON.parse(message.body)
                 console.log('Novo zona:', zona)
-                onZona?.(zona)
+                callbacks.onZona?.(zona)
+            })
+            client.subscribe('/topic/ocorrencia/quantidade-status', (message) => {
+                const qtdStatus = JSON.parse(message.body)
+                console.log('Nova quantidade status:', qtdStatus)
+                callbacks.onQtdStatus?.(qtdStatus)
+            })
+            client.subscribe('/topic/ocorrencia/quantidade-zonas', (message) => {
+                const qtdZonas = JSON.parse(message.body)
+                console.log('Nova quantidade zonas:', qtdZonas)
+                callbacks.onQtdZonas?.(qtdZonas)
             })
         },
         onDisconnect: () => {
@@ -37,11 +60,28 @@ export function conectarWebSocket({onAlerta, onMaquina, onEpi, onZona} = {}) {
         },
         onStompError: (frame) => {
             console.error('Erro STOMP:', frame)
+        },
+        onWebSocketError: (error) => {
+            console.error('Erro WebSocket:', error)
         }
     })
 
     client.activate()
 }
+
+// Registra os eventos que um componente quer receber
+export function registrarCallback(tipo, callback) {
+
+    callbacks[tipo] = callback
+}
+
+
+// Remove o callback quando o componente sair
+export function removerCallback(tipo) {
+
+    callbacks[tipo] = null
+}
+
 
 export function desconectarWebSocket() {
 
