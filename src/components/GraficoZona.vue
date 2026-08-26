@@ -31,6 +31,8 @@ const chartData = ref({
         {
             label: 'Conformidades',
             data: [],
+            backgroundColor: [],
+            borderWidth: 2
         }
     ]
 })
@@ -39,6 +41,11 @@ const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
 
+    plugins: {
+        legend: {
+            position: 'bottom'
+        }
+    }
 }
 
 function atualizarGrafico(dados) {
@@ -50,7 +57,7 @@ function atualizarGrafico(dados) {
             {
                 label: 'Quantidade de conformidades',
                 data: dados.map(item => item.quantidade),
-                backgroundColor: ['#ABC798'],
+                backgroundColor: ['#5243e3'],
                 borderWidth: 2
             }
         ]
@@ -65,7 +72,6 @@ async function buscarDadosGrafico() {
             '/api/ocorrencia/quantidade-zonas'
         )
 
-        console.log("aa")
         const dados = response.data
 
         chartData.value = {
@@ -75,12 +81,12 @@ async function buscarDadosGrafico() {
                 {
                     label: 'Quantidade de conformidades',
                     data: dados.map(item => item.quantidade),
-                    backgroundColor: ['#ABC798', "#0F172A"],
+                    backgroundColor: ["#5243e3"],
                     borderWidth: 2
                 }
             ]
         }
-        console.log("aaaaa")
+
     } catch (error) {
 
         console.error('Erro ao buscar dados do gráfico:', error)

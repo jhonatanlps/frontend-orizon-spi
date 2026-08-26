@@ -2,16 +2,31 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Settings, HardHat, Box, AlertTriangle, LogOut } from 'lucide-vue-next';
+import axios from 'axios';
 
-const email = ref('')
-const senha = ref('')
-const router = useRouter()
+const epi = ref({
+    nome: '',
+    descricao: '',
+})
 
-function handleLogin() {
-  // Lógica que estava no seu script.js
-  if (email.value && senha.value) {
-    router.push('/supervisor') // Redireciona para o painel
-  }
+async function salvarEpi() {
+    try {
+        const response = await axios.post(
+            '/api/epi',
+            epi.value
+        )
+
+        console.log(response.data)
+
+        // limpa o formulário
+        epi.value = {
+            nome: '',
+            descricao: '',
+        }
+
+    } catch (err) {
+        console.error(err)
+    }
 }
 </script>
 
@@ -65,41 +80,16 @@ function handleLogin() {
             <form>
                 <div class="form-group">
                 <label class="form-label">Nome do EPI *</label>
-                <input type="text" class="form-control" placeholder="Ex: Capacete de Segurança">
+                <input v-model="epi.nome" type="text" class="form-control" placeholder="Ex: Capacete de Segurança">
                 </div>
 
                 <div class="form-group">
                 <label class="form-label">Descrição *</label>
-                <textarea class="form-control" placeholder="Descreva as características e aplicações do EPI"></textarea>
-                </div>
-
-                <div class="form-group">
-                <label class="form-label">Tipo de Proteção *</label>
-                <select class="form-control">
-                    <option value="" disabled selected>Selecione o tipo de proteção</option>
-                    <option value="craniana">Proteção Craniana</option>
-                    <option value="visual">Proteção Visual</option>
-                    <option value="auditiva">Proteção Auditiva</option>
-                    <option value="respiratoria">Proteção Respiratória</option>
-                    <option value="maos">Proteção das Mãos</option>
-                    <option value="pes">Proteção dos Pés</option>
-                </select>
-                </div>
-
-                <div class="grid-2">
-                <div class="form-group">
-                    <label class="form-label">Quantidade em Estoque*</label>
-                    <input type="number" class="form-control" value="0">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Quantidade Mínima*</label>
-                    <input type="number" class="form-control" value="0">
-                </div>
+                <textarea v-model="epi.descricao" class="form-control" placeholder="Descreva as características e aplicações do EPI"></textarea>
                 </div>
 
                 <div class="form-actions">
-                <button type="button" class="btn btn-cyan">Salvar EPI</button>
+                <button @click.prevent="salvarEpi" type="button" class="btn btn-cyan">Salvar EPI</button>
                 <button type="button" class="btn btn-secondary"><i data-lucide="x" size="16"></i> Cancelar</button>
                 </div>
             </form>

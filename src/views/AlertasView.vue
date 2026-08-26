@@ -2,16 +2,18 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Settings, HardHat, Box, AlertTriangle, LogOut, Clock } from 'lucide-vue-next';
 import axios from 'axios';
-import { conectarWebSocket, desconectarWebSocket } from '../services/WebSocket';
+import { conectarWebSocket, registrarCallback, removerCallback } from '../services/WebSocket';
 
 const alertasRecentes = ref([])
 const carregando = ref(false)
 
-const qtdAlertasResolvidos = computed(() => {
-                                    return alertasRecentes.value.filter(alerta => alerta.status === 'Resolvido').length
-                                    })
+const qtdAlertasAlta = computed(() => {
+    return alertasRecentes.value.filter(alerta => alerta.status === 'ALTA').length
+})
 
-const alertasNaoResolvido = computed(() => { return alertasRecentes.value.filter(alerta => alerta.status != 'Resolvido')})
+const qtdAlertasInformativo = computed(() => { 
+    return alertasRecentes.value.filter(alerta => alerta.status == 'INFORMATIVO').length
+})
 
 async function buscarAlertas() {
     carregando.value = true
@@ -67,12 +69,16 @@ function receberAlerta(alerta) {
 onMounted(() => {
     buscarAlertas()
     console.log("conectando no websocket...")
-    conectarWebSocket(receberAlerta)
+    conectarWebSocket()
+    registrarCallback(
+        'onAlerta',
+        receberAlerta
+    )
 
 })
 
 onUnmounted(() => {
-    desconectarWebSocket()
+    removerCallback('onAlerta')
 })
 
 </script>
@@ -97,9 +103,6 @@ onUnmounted(() => {
                     <li class="nav-item">
                         <a href="/config-maquina"><Box /> Config. Máquina</a>
                     </li>
-                    <li class="nav-item">
-                        <a href="/calibrar-zonas"><AlertTriangle /> Calibracao de zonas</a>
-                    </li>
                     <li class="nav-item active">
                         <a href="/alertas"><AlertTriangle /> Alerta</a>
                     </li>
@@ -119,26 +122,26 @@ onUnmounted(() => {
         <main v-else class="main-content">
             <header class="page-header">
                 <h1 class="page-title">Alertas do Sistema</h1>
-                <p class="page-subtitle">Monitoramento de alertas críticos e ocorrências</p>
+                <p class="page-subtitle">Monitoramento de alertas</p>
             </header>
 
             <!-- METRICS CARDS -->
             <div class="metrics-grid">
                 <div class="metric-card danger">
-                    <div class="metric-label">Alertas</div>
-                    <div class="metric-value danger">{{ alertasNaoResolvido.length }}</div>
+                    <div class="metric-label">Alertas de nível alto</div>
+                    <div class="metric-value danger">{{ qtdAlertasAlta }}</div>
                 </div>
                 
-                <div class="metric-card success">
-                    <div class="metric-label">Resolvido</div>
-                    <div class="metric-value success">{{ qtdAlertasResolvidos }}</div>
+                <div class="metric-card danger">
+                    <div class="metric-label">Alertas de nível informativo</div>
+                    <div class="metric-value danger">{{ qtdAlertasInformativo }}</div>
                 </div>
             </div>
 
             <!-- ALERT CARDS LIST -->
             <div class="alerts-list">
                 <!-- Alert Item 1 -->
-                <div v-for="alerta in alertasNaoResolvido" class="alert-card">
+                <div v-for="alerta in alertasRecentes" class="alert-card">
                     <div class="alert-icon">
                         <AlertTriangle :size="24" />
                     </div>

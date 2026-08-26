@@ -8,7 +8,8 @@ let callbacks = {
     onEpi: null,
     onZona: null,
     onQtdStatus: null,
-    onQtdZonas: null
+    onQtdZonas: null,
+    onAlertaDia: null,
 }
 
 export function conectarWebSocket() {
@@ -53,6 +54,11 @@ export function conectarWebSocket() {
                 const qtdZonas = JSON.parse(message.body)
                 console.log('Nova quantidade zonas:', qtdZonas)
                 callbacks.onQtdZonas?.(qtdZonas)
+            })
+            client.subscribe('/topic/alerta/alertas-dia', (message) => {
+                const alertaDia = JSON.parse(message.body)
+                console.log('Nova alertas do dia:', alertaDia)
+                callbacks.onAlertaDia?.(alertaDia)
             })
         },
         onDisconnect: () => {

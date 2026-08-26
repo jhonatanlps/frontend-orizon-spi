@@ -76,6 +76,9 @@ onUnmounted(() => {
                         <a href="/config-maquina"><Box /> Config. Máquina</a>
                     </li>
                     <li class="nav-item active">
+                        <a href="/calibrar-zonas"><AlertTriangle /> Calibracao de zonas</a>
+                    </li>
+                    <li class="nav-item">
                         <a href="/alertas"><AlertTriangle /> Alerta</a>
                     </li>
                 </ul>
@@ -92,70 +95,71 @@ onUnmounted(() => {
         <div v-if="carregando">Carregando dados do servidor...</div>
 
         <main v-else class="main-content">
-            <header class="page-header">
-                <h1 class="page-title">Alertas do Sistema</h1>
-                <p class="page-subtitle">Monitoramento de alertas críticos e ocorrências</p>
-            </header>
-
-            <!-- METRICS CARDS -->
-            <div class="metrics-grid">
-                <div class="metric-card danger">
-                    <div class="metric-label">Alertas</div>
-                    <div class="metric-value danger">{{ alertasNaoResolvido.length }}</div>
-                </div>
-                
-                <div class="metric-card success">
-                    <div class="metric-label">Resolvido</div>
-                    <div class="metric-value success">{{ qtdAlertasResolvidos }}</div>
-                </div>
-            </div>
-
-            <!-- ALERT CARDS LIST -->
-            <div v-for="alerta in alertasRecentes" :key="alerta.id_alerta" class="alerts-list">
-                <!-- Alert Item 1 -->
-                <div v-if="alerta.status != 'Resolvido'" class="alert-card">
-                    <div class="alert-icon">
-                        <AlertTriangle :size="24" />
+            <div class="layout">
+                <div class="stage">
+                    <div class="toolbar">
+                    <button class="btn" id="btnUpload">Carregar foto da câmera</button>
+                    <input type="file" id="fileInput" accept="image/*" style="display:none">
+                    <button class="btn" id="btnUndo" disabled>Desfazer ponto</button>
+                    <button class="btn" id="btnClose" disabled>Fechar polígono</button>
+                    <div class="spacer"></div>
+                    <span class="count" id="pointCount"></span>
                     </div>
-                    <div class="alert-body">
-                        <div class="alert-title">Maquina desativada - {{ alerta.ocorrencia.maquina.setor }}</div>
-                        <div class="alert-desc">{{ alerta.mensagem }}</div>
-                        <div class="alert-machine"><strong>Máquina:</strong> {{ alerta.ocorrencia.maquina.nome }}</div>
-                    </div>
-                    <div class="alert-actions">
-                        <button @click="resolverAlerta(alerta.id_alerta)" class="btn-resolve">Resolver</button>
-                        <div class="alert-time">
-                            <Clock :size="14" /> {{ alerta.data_hora }}
+
+                    <div id="stageWrap">
+                    <div class="stage-empty" id="emptyState">
+                        <div class="empty-content">
+                        <div class="empty-kicker">Orizon / visão computacional</div>
+                        <div class="empty-title">Nenhuma imagem carregada</div>
+                        <span class="hint">Carregue um frame da câmera e marque os pontos da área onde o EPI deve ser detectado. Os pontos são convertidos automaticamente para a resolução original.</span>
                         </div>
                     </div>
-                </div>
-            </div>
+                    <canvas id="canvas" style="display:none"></canvas>
+                    </div>
 
-            <!-- INFRAÇÕES RECENTES TABLE -->
-            <div class="table-card">
-                <div class="table-header">
-                    <h2 class="table-title">Infrações Recentes</h2>
+                    <div class="save-form" id="saveForm" style="display:none">
+                    <div class="field">
+                        <label>Nome da zona (usado no script Python)</label>
+                        <input type="text" id="zoneName" placeholder="ex: MAQUINA_A">
+                    </div>
+                    <div class="field">
+                        <label>ID da máquina no backend</label>
+                        <input type="text" id="zoneMachineId" placeholder="ex: 1">
+                    </div>
+                    <div class="field">
+                        <label>EPIs obrigatórios (separados por vírgula)</label>
+                        <input type="text" id="zoneEpis" placeholder="ex: epi_capacete, epi_oculos">
+                    </div>
+                    <div class="row2">
+                        <button class="btn btn-primary" id="btnSaveZone">Salvar zona</button>
+                        <button class="btn" id="btnCancelZone">Cancelar</button>
+                    </div>
+                    </div>
                 </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Funcionário</th>
-                                <th>Área</th>
-                                <th>Descrição</th>
-                                <th>Data Hora</th>
-                            </tr>
-                        </thead>
-                        <tbody v-for="alerta in alertasRecentes">
-                            <tr>
-                                <td class="table-worker">{{ alerta.ocorrencia.funcionario.nome }}</td>
-                                <td>{{ alerta.ocorrencia.maquina.setor }}</td>
-                                <td>{{ alerta.mensagem }}</td>
-                                <td>{{ alerta.data_hora }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
+
+                <div class="side">
+                    <div class="side-section">
+                    <div class="section-title"><h2>Configuração</h2><small>01</small></div>
+                    <div class="field">
+                        <label>URL da API</label>
+                        <input type="text" id="apiUrlInput" placeholder="https://webhook.site/seu-id" value="">
+                    </div>
+                    </div>
+
+                    <div class="side-section">
+                    <div class="section-title"><h2>Zonas definidas</h2><small id="zoneCounter">02</small></div>
+                    <div id="zoneList"></div>
+                    <div class="empty-hint" id="zoneEmptyHint">Nenhuma zona salva ainda.</div>
+                    </div>
+
+                    <div class="side-section">
+                    <div class="section-title"><h2>Saída para o backend</h2><small>03</small></div>
+                    <pre id="jsonOut">{}</pre>
+                    <div class="row2" style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="btn" id="btnCopy">Copiar</button>
+                        <button class="btn btn-primary" id="btnDownload">Baixar .json</button>
+                    </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -163,265 +167,398 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* --- MAIN CONTENT --- */
-.main-content {
-    flex: 1;
-    padding: 32px 40px;
-    overflow-y: auto;
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 
-.page-header {
-    margin-bottom: 32px;
+.brand-logo {
+  width: 116px;
+  height: 54px;
+  object-fit: contain;
+  object-position: center;
 }
 
-.page-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text-main);
+.brand-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--line-strong);
 }
 
-.page-subtitle {
-    font-size: 14px;
-    color: var(--text-muted);
-    margin-top: 4px;
+.brand-copy { display: grid; gap: 2px; }
+
+.brand-copy strong {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
-/* --- TOP METRICS CARDS --- */
-.metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 32px;
-    max-width: 800px;
+.brand-copy span {
+  color: var(--muted);
+  font-size: 11px;
 }
 
-.metric-card {
-    background-color: var(--bg-card);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    position: relative;
-    overflow: hidden;
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 11px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
 }
 
-.metric-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 5px;
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 14px rgba(168,255,255,.75);
 }
 
-.metric-card.danger::before { background-color: var(--danger-main); }
-.metric-card.success::before { background-color: var(--success-main); }
-
-.metric-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 12px;
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  min-height: calc(100vh - 76px);
 }
 
-.metric-value {
-    font-size: 32px;
-    font-weight: 700;
+.stage {
+  min-width: 0;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border-right: 1px solid var(--line);
 }
 
-.metric-value.danger { color: var(--danger-main); }
-.metric-value.success { color: var(--success-main); }
-
-/* --- ALERT CARDS --- */
-.alerts-list {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-bottom: 32px;
+.toolbar {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
-.alert-card {
-    background-color: var(--bg-card);
-    border-radius: 12px;
-    padding: 20px 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    display: flex;
-    gap: 20px;
-    position: relative;
-    overflow: hidden;
+.toolbar .spacer { flex: 1; }
+
+.toolbar .count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--cyan);
+  padding-left: 10px;
 }
 
-.alert-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 5px;
-    background-color: var(--danger-main);
+.btn {
+  appearance: none;
+  font-size: 12px;
+  padding: 9px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  transition: .18s ease;
 }
 
-.alert-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    background-color: var(--danger-light);
-    color: var(--danger-main);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+.btn:hover {
+  background: var(--panel-hover);
+  border-color: #4a6285;
+  transform: translateY(-1px);
 }
 
-.alert-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+.btn:active { transform: translateY(0); }
+
+.btn:disabled {
+  opacity: .32;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.alert-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 6px;
+.btn-primary {
+  background: linear-gradient(135deg, var(--cyan), #7ddcff);
+  border-color: transparent;
+  color: #07121e;
+  font-weight: 750;
 }
 
-.alert-desc {
-    font-size: 13px;
-    color: var(--text-main);
-    margin-bottom: 4px;
+.btn-primary:hover {
+  border-color: transparent;
+  box-shadow: 0 7px 24px rgba(101,230,238,.16);
 }
 
-.alert-machine {
-    font-size: 13px;
-    color: var(--text-muted);
+.btn-danger { color: var(--danger); }
+
+#stageWrap {
+  min-height: 0;
+  flex: 1;
+  display: flex;
 }
 
-.alert-machine strong {
-    color: var(--text-main);
-    font-weight: 600;
+.stage-empty {
+  flex: 1;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(101,230,238,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,230,238,.035) 1px, transparent 1px),
+    var(--bg-deep);
+  background-size: 34px 34px;
+  text-align: center;
 }
 
-.alert-status-text {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--success-main);
-    margin-top: 8px;
+.stage-empty::before,
+.stage-empty::after {
+  content: "";
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  border: 1px solid rgba(168,255,255,.13);
 }
 
-.alert-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: space-between;
+.stage-empty::before {
+  top: 28px;
+  left: 28px;
+  border-right: 0;
+  border-bottom: 0;
 }
 
-.btn-resolve {
-    background-color: var(--success-btn);
-    color: #ffffff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
+.stage-empty::after {
+  right: 28px;
+  bottom: 28px;
+  border-left: 0;
+  border-top: 0;
 }
 
-.btn-resolve:hover {
-    background-color: var(--success-btn-hover);
+.empty-content {
+  position: relative;
+  z-index: 1;
+  max-width: 430px;
 }
 
-.alert-time {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 500;
+.empty-kicker {
+  color: var(--cyan);
+  font: 10px var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
 }
 
-/* --- TABLE SECTION --- */
-.table-card {
-    background-color: var(--bg-card);
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    overflow: hidden;
+.empty-title {
+  font-size: 21px;
+  font-weight: 650;
+  margin-bottom: 9px;
 }
 
-.table-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
+.stage-empty span.hint {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
 }
 
-.table-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-main);
+canvas {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  align-self: flex-start;
+  border: 1px solid var(--line-strong);
+  background: #050a12;
+  cursor: crosshair;
+  display: block;
 }
 
-.table-container {
-    width: 100%;
-    overflow-x: auto;
+.side {
+  background: rgba(8,14,25,.72);
+  padding: 25px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  overflow-y: auto;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
+.side-section {
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
 }
 
-th {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border-color);
+.side-section:last-child {
+  border-bottom: 0;
 }
 
-td {
-    padding: 16px 24px;
-    font-size: 14px;
-    color: var(--text-main);
-    border-bottom: 1px solid #f1f5f9;
+.side h2 {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  color: var(--muted-2);
+  font-weight: 700;
+  margin: 0 0 13px;
 }
 
-tr:last-child td {
-    border-bottom: none;
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
 }
 
-.table-worker {
-    font-weight: 600;
+.section-title small {
+  color: var(--muted-2);
+  font: 10px var(--mono);
 }
 
-/* Responsividade */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 11px;
+}
+
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.field input {
+  width: 100%;
+  font-size: 12px;
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 10px 11px;
+  border-radius: 7px;
+  transition: .18s ease;
+}
+
+.field input::placeholder { color: #4f6078; }
+
+.field input:focus {
+  outline: none;
+  border-color: var(--cyan-strong);
+  box-shadow: 0 0 0 3px rgba(101,230,238,.07);
+}
+
+.zone-card {
+  background: linear-gradient(145deg, rgba(16,26,43,.95), rgba(11,20,34,.95));
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px;
+  margin-bottom: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zone-card:hover { border-color: var(--line-strong); }
+
+.zone-card .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.zone-card .swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.zone-card .name {
+  font-weight: 650;
+  font-size: 12px;
+}
+
+.zone-card .meta {
+  font-size: 10px;
+  color: var(--muted-2);
+  font-family: var(--mono);
+  line-height: 1.5;
+}
+
+.zone-card .epis {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.zone-card .remove {
+  background: none;
+  border: none;
+  color: var(--muted-2);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.zone-card .remove:hover { color: var(--danger); }
+
+.empty-hint {
+  font-size: 11px;
+  color: var(--muted-2);
+  padding: 12px 0 2px;
+}
+
+pre#jsonOut {
+  margin: 0;
+  background: #070c15;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 13px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.55;
+  color: #b9e8e7;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.save-form {
+  background:
+    linear-gradient(135deg, rgba(101,230,238,.06), transparent 50%),
+    var(--panel);
+  border: 1px solid #2c6170;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.save-form .row2,
+.side .row2 {
+  display: flex;
+  gap: 8px;
+}
+
+.save-form .row2 .btn { flex: 1; }
+
+.send-status { min-height: 14px; }
+
 @media (max-width: 900px) {
-    .metrics-grid {
-    grid-template-columns: 1fr;
-    }
-    .alert-card {
-    flex-direction: column;
-    align-items: flex-start;
-    }
-    .alert-actions {
-    width: 100%;
-    flex-direction: row;
-    align-items: center;
-    margin-top: 12px;
-    }
+  .layout { grid-template-columns: 1fr; }
+  .stage { border-right: 0; border-bottom: 1px solid var(--line); }
+  .side { min-height: auto; }
 }
 
-@media (max-width: 768px) {
-    body {
-    flex-direction: column;
-    }
-    .sidebar {
-    width: 100%;
-    }
-    .main-content {
-    padding: 20px;
-    }
+@media (max-width: 600px) {
+  header { padding: 0 16px; }
+  .brand-divider, .brand-copy, .header-status { display: none; }
+  .stage { padding: 16px; }
+  .stage-empty { min-height: 390px; }
 }
 
-@import '../assets/css/alertas.css';
 </style>

@@ -1,12 +1,52 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
 import { Settings, Activity, Accessibility, TrendingUp, LogOut, FileText } from 'lucide-vue-next';
 import GraficoZona from '../components/GraficoZona.vue';
 import GraficoPizza from '../components/GraficoPizza.vue';
+import InfracoesRecentes from '../components/InfracoesRecentes.vue';
+import axios from 'axios';
+import { conectarWebSocket, registrarCallback } from '../services/WebSocket.js';
+
+const qtdOcorrenciasStatus = ref([]);
+const carregando = ref(false)
+
+const qtdOcorrenciasBloqueado = computed(() => {
+    const ocorrencia = qtdOcorrenciasStatus.value.find(
+        ocorrencia => ocorrencia.status === "BLOQUEADA"
+    )
+
+    return ocorrencia?.quantidade ?? 0
+})
+
+const qtdOcorrenciasOk = computed(() => {
+    const ocorrencia = qtdOcorrenciasStatus.value.find(
+        ocorrencia => ocorrencia.status === "OK"
+    )
+
+    return ocorrencia?.quantidade ?? 0
+})
+
+function atualizarOcorrencias(dados) {
+
+    qtdOcorrenciasStatus.value = dados.data
+
+}
+
+async function contarOcorrencias(){
+    carregando.value = true
+    try {
+        const resposta = await axios.get('/api/ocorrencia/quantidade-status')
+        
+        qtdOcorrenciasStatus.value = resposta.data
+    } catch (error) {
+        console.error("Erro ao contar ocorrencias ", error)    
+    } finally{
+        carregando.value = false
+    }
+}
 
 onMounted(() => {
-    
+    contarOcorrencias()
 })
 
 </script>
@@ -52,7 +92,7 @@ onMounted(() => {
                 </div>
                 <div class="metric-info">
                 <span class="metric-label">Total de ocorrências</span>
-                <span class="metric-value">4</span>
+                <span class="metric-value">{{ qtdOcorrenciasBloqueado + qtdOcorrenciasOk }}</span>
                 </div>
             </div>
 
@@ -72,7 +112,7 @@ onMounted(() => {
                 </div>
                 <div class="metric-info">
                 <span class="metric-label">Conformidade</span>
-                <span class="metric-value">94%</span>
+                <span class="metric-value">{{ (((qtdOcorrenciasOk / (qtdOcorrenciasOk + qtdOcorrenciasBloqueado))*100).toFixed(2)) }}%</span>
                 </div>
             </div>
             </div>
@@ -95,53 +135,7 @@ onMounted(() => {
 
             </div>
 
-            <!-- INFRAÇÕES RECENTES TABLE -->
-            <div class="card" style="padding: 0; overflow: hidden;">
-            <h2 class="card-title" style="padding: 24px 24px 0 24px; margin-bottom: 16px;">Infrações recentes</h2>
-            <div class="table-container">
-                <table>
-                <thead>
-                    <tr>
-                    <th>Funcionário</th>
-                    <th>Tipo</th>
-                    <th>Área</th>
-                    <th>Hora</th>
-                    <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                    <td class="fw-600">Jorge</td>
-                    <td>Procedimento inadequado</td>
-                    <td>Setor A</td>
-                    <td>14:03</td>
-                    <td><span class="badge badge-baixo">Baixo</span></td>
-                    </tr>
-                    <tr>
-                    <td class="fw-600">Pedro</td>
-                    <td>Acesso não autorizado</td>
-                    <td>Setor B</td>
-                    <td>16:57</td>
-                    <td><span class="badge badge-medio">Médio</span></td>
-                    </tr>
-                    <tr>
-                    <td class="fw-600">Ana</td>
-                    <td>Procedimento inadequado</td>
-                    <td>Setor A</td>
-                    <td>10:20</td>
-                    <td><span class="badge badge-baixo">Baixo</span></td>
-                    </tr>
-                    <tr>
-                    <td class="fw-600">Maria</td>
-                    <td>EPI não utilizado</td>
-                    <td>Setor C</td>
-                    <td>11:09</td>
-                    <td><span class="badge badge-critico">Crítico</span></td>
-                    </tr>
-                </tbody>
-                </table>
-            </div>
-            </div>
+            <InfracoesRecentes />
         </main>
     </div>
 </template>

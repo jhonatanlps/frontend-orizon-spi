@@ -56,11 +56,11 @@ function atualizarGrafico(dados) {
                 backgroundColor: dados.map(item => {
 
                     if (item.status === 'BLOQUEADA') {
-                        return '#0F172A'
+                        return '#A90F0F'
                     }
 
                     if (item.status === 'OK') {
-                        return '#06B6D4'
+                        return '#10b981'
                     }
 
                 }),
@@ -91,11 +91,11 @@ async function buscarDadosGrafico() {
                     backgroundColor: dados.map(item => {
 
                         if (item.status === 'BLOQUEADA') {
-                            return '#0F172A'
+                            return '#A90F0F'
                         }
 
                         if (item.status === 'OK') {
-                            return '#06B6D4'
+                            return '#10b981'
                         }
                         
                     }),
@@ -132,14 +132,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-
     <div style="height: 400px; width: 100%;">
-
         <Doughnut
             :data="chartData"
             :options="chartOptions"
         />
-
     </div>
-
 </template>

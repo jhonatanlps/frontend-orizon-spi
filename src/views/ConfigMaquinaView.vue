@@ -1,9 +1,35 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { Settings, HardHat, Box, AlertTriangle, LogOut,  Clock } from 'lucide-vue-next';
+import axios from 'axios';
 
-const router = useRouter()
+const maquina = ref({
+    nome: '',
+    descricao: '',
+    setor: ''
+})
+
+async function salvarMaquina() {
+    try {
+        const response = await axios.post(
+            '/api/maquina',
+            maquina.value
+        )
+
+        console.log(response.data)
+
+        // limpa o formulário
+        maquina.value = {
+            nome: '',
+            descricao: '',
+            setor: ''
+        }
+
+    } catch (err) {
+        console.error(err)
+    }
+}
+
 
 </script>
 
@@ -57,90 +83,26 @@ const router = useRouter()
             <form>
                 <div class="form-group">
                 <label class="form-label">Nome da Máquina *</label>
-                <input type="text" class="form-control" placeholder="Ex: Prensa Hidráulica 01">
+                <input v-model="maquina.nome" type="text" class="form-control" placeholder="Ex: Prensa Hidráulica 01">
                 </div>
 
                 <div class="form-group">
                 <label class="form-label">Descrição *</label>
-                <textarea class="form-control" placeholder="Informações adicionais sobre a máquina e procedimentos de segurança"></textarea>
+                <textarea v-model="maquina.descricao" class="form-control" placeholder="Informações adicionais sobre a máquina e procedimentos de segurança"></textarea>
                 </div>
 
-                <div class="grid-2">
                 <div class="form-group">
                     <label class="form-label">Área Monitorada *</label>
-                    <select class="form-control">
-                    <option value="" disabled selected>Selecione a área</option>
-                    <option value="1">Setor A - Linha de Produção 1</option>
-                    <option value="2">Setor B - Montagem</option>
-                    <option value="3">Setor C - Sala de Controle</option>
+                    <select v-model="maquina.setor" class="form-control">
+                        <option value="" >Selecione a área</option>
+                        <option value="1">Setor A - Linha de Produção 1</option>
+                        <option value="2">Setor B - Montagem</option>
+                        <option value="3">Setor C - Sala de Controle</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Nível de Risco *</label>
-                    <select class="form-control">
-                    <option value="" disabled selected>Selecione o nível</option>
-                    <option value="baixo">Baixo</option>
-                    <option value="medio">Médio</option>
-                    <option value="alto">Alto</option>
-                    </select>
-                </div>
-                </div>
-
-                <div class="section-label">EPIs Obrigatórios para Operação</div>
-
-                <div class="epi-grid">
-                <label class="epi-card">
-                    <input type="checkbox">
-                    <div class="epi-info">
-                    <strong>Capacete de Segurança</strong>
-                    <span>Proteção Craniana</span>
-                    </div>
-                </label>
-
-                <label class="epi-card">
-                    <input type="checkbox">
-                    <div class="epi-info">
-                    <strong>Botas de Segurança</strong>
-                    <span>Proteção dos Pés</span>
-                    </div>
-                </label>
-
-                <label class="epi-card">
-                    <input type="checkbox">
-                    <div class="epi-info">
-                    <strong>Óculos de Proteção</strong>
-                    <span>Proteção Visual</span>
-                    </div>
-                </label>
-
-                <label class="epi-card">
-                    <input type="checkbox">
-                    <div class="epi-info">
-                    <strong>Avental de Proteção</strong>
-                    <span>Proteção do Corpo</span>
-                    </div>
-                </label>
-
-                <label class="epi-card">
-                    <input type="checkbox">
-                    <div class="epi-info">
-                    <strong>Protetor Auricular</strong>
-                    <span>Proteção Auditiva</span>
-                    </div>
-                </label>
-
-                <label class="epi-card">
-                    <input type="checkbox">
-                    <div class="epi-info">
-                    <strong>Máscara Respiratória</strong>
-                    <span>Proteção Respiratória</span>
-                    </div>
-                </label>
                 </div>
 
                 <div class="form-actions">
-                <button type="button" class="btn btn-primary">Salvar Configuração</button>
+                <button @click.prevent="salvarMaquina" type="button" class="btn btn-primary">Salvar Configuração</button>
                 <button type="button" class="btn btn-secondary"><i data-lucide="x" size="16"></i> Cancelar</button>
                 </div>
             </form>

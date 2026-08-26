@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Settings, HardHat, Box, AlertTriangle, LogOut, MapPin, Trash2, Plus} from 'lucide-vue-next';
 import axios from 'axios';
-import { conectarWebSocket, desconectarWebSocket } from '../services/WebSocket';
+import { conectarWebSocket, registrarCallback, removerCallback } from '../services/WebSocket';
 
 const carregando = ref(false)
 const maquinas = ref([])
@@ -35,6 +35,22 @@ async function buscarMaquinas() {
     }
 }
 
+async function receberMaquinas(maquina) {
+
+    maquinas.value.unshift(maquina)
+    
+}
+
+async function deletarMaquina(id) {
+    try {
+        const resposta = await axios.delete(`/api/maquina/${id}`)
+
+        maquinas.value.shift(resposta.data)
+    } catch (error) {
+        console.error("Erro ao deletar maquinas ", maquinas)
+    }
+}
+
 async function buscarEpis() {
     carregando.value = true
     try {
@@ -48,6 +64,23 @@ async function buscarEpis() {
         carregando.value = false
     }
     
+}
+
+
+async function receberEpis(epi) {
+
+    epis.value.unshift(epi)
+    
+}
+
+async function deletarEpi(id) {
+    try {
+        const resposta = await axios.delete(`/api/epi/${id}`)
+
+        epis.value.shift(resposta.data)
+    } catch (error) {
+        console.error("Erro ao deletar maquinas ", epis)
+    }
 }
 
 async function buscarZonas() {
@@ -64,6 +97,23 @@ async function buscarZonas() {
     }
 }
 
+
+async function receberZonas(zona) {
+
+    zonas.value.unshift(zona)
+    
+}
+
+async function deletarZona(id) {
+    try {
+        const resposta = await axios.delete(`/api/zona/${id}`)
+
+        zonas.value.shift(resposta.data)
+    } catch (error) {
+        console.error("Erro ao deletar maquinas ", zonas)
+    }
+}
+
 onMounted(() => {
     buscarEpis()
     buscarMaquinas()
@@ -71,32 +121,29 @@ onMounted(() => {
 
     console.log("conectando no web socket")
 
-    conectarWebSocket({
-        
-        onEpi: (epi) => {
-            
-            console.log('EPI recebido:', epi)
+    conectarWebSocket()
 
-            return epis.value.unshift(epi)
-        },
-        onZona: (zona) => {
+    registrarCallback(
+        'onEpi', 
+        receberEpis
+    )
 
-            console.log('Zona recebido:', zona)
+    registrarCallback(
+        'onMaquina', 
+        receberMaquinas
+    )
 
-            return zonas.value.unshift(zona)
-        },
-        onMaquina: (maquina) => {
-
-            console.log('Maquina recebido:', maquina)
-
-            return maquinas.value.unshift(maquina)
-        }
-    })
+    registrarCallback(
+        'onZona', 
+        receberZonas
+    )
 
 })
 
 onUnmounted(() => {
-    desconectarWebSocket()
+    removerCallback('onEpi')
+    removerCallback('onMaquina')
+    removerCallback('onZona')
 })
 
 </script>
@@ -199,7 +246,7 @@ onUnmounted(() => {
                         <td>{{ maquina.descricao }}</td>
                         <td>
                         <div class="action-btns">
-                            <button class="action-btn delete" title="Excluir"> <Trash2 :size="18" /></button>
+                            <button @click="deletarMaquina(maquina.id_maquina)" class="action-btn delete" title="Excluir"> <Trash2 :size="18" /></button>
                         </div>
                         </td>
                     </tr>
@@ -220,14 +267,14 @@ onUnmounted(() => {
 
                     <div class="epi-cards-grid">
                         <!-- EPI Item 1 -->
-                        <div v-for="epi in epis" class="epi-item-card">
+                        <div v-for="epi in epis" :key="epi.id_epi" class="epi-item-card">
                             <div class="epi-card-header">
                                 <div>
                                     <div class="epi-name">{{ epi.nome }}</div>
                                     <div class="epi-desc">{{ epi.descricao }}</div>
                                 </div>
                                 <div class="action-btns">
-                                    <button class="action-btn delete"><Trash2 :size="18" /></button>
+                                    <button @click="deletarEpi(epi.id_epi)" class="action-btn delete"><Trash2 :size="18" /></button>
                                 </div>
                             </div>
                         </div>
@@ -244,47 +291,15 @@ onUnmounted(() => {
 
                     <div class="areas-grid">
 
-                        <div class="area-card">
-                            <div class="area-title">Setor A - Linha de Produção 1</div>
+                        <div v-for="zona in zonas" class="area-card">
+                            <div class="area-title">{{ zona.nome }}</div>
                             <div class="area-details">
                                 <div class="area-detail-item">
-                                    <label>Máquinas</label>
-                                    <span>5</span>
-                                </div>
-                                <div class="area-detail-item" style="text-align: right;">
-                                    <label>Monitoramento</label>
-                                    <span class="status-green">Ativo</span>
+                                    <label>Máquina:</label>
+                                    <span>{{ zona.maquina.nome }}</span>
                                 </div>
                             </div>
                         </div>  
-
-                        <div class="area-card">
-                            <div class="area-title">Setor B - Montagem</div>
-                            <div class="area-details">
-                                <div class="area-detail-item">
-                                    <label>Máquinas</label>
-                                    <span>3</span>
-                                </div>
-                                <div class="area-detail-item" style="text-align: right;">
-                                    <label>Monitoramento</label>
-                                    <span class="status-green">Ativo</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="area-card">
-                            <div class="area-title">Setor C - Área Química</div>
-                            <div class="area-details">
-                                <div class="area-detail-item">
-                                    <label>Máquinas</label>
-                                    <span>2</span>
-                                </div>
-                                <div class="area-detail-item" style="text-align: right;">
-                                    <label>Monitoramento</label>
-                                    <span class="status-green">Ativo</span>
-                                </div>
-                            </div>
-                        </div>
 
                     </div>
                 </div>
