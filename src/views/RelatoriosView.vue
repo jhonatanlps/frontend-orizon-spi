@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Settings, ChevronDown, Calendar, BarChart2, ClipboardCheck, Siren, Users, BookOpen, Download, LogOut, FileText } from 'lucide-vue-next';
+import { Settings, Cctv, ChevronDown, Calendar, BarChart2, ClipboardCheck, Siren, Users, BookOpen, Download, LogOut, FileText } from 'lucide-vue-next';
 
 const email = ref('')
 const senha = ref('')
@@ -30,6 +30,9 @@ function handleLogin() {
                     </li>
                     <li class="nav-item active">
                         <a href="/relatorios"><FileText /> Relatórios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/cameras"><Cctv /> Câmeras</a>
                     </li>
                 </ul>
             </div>

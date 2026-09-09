@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { Settings, HardHat, Box, AlertTriangle, LogOut,  Clock } from 'lucide-vue-next';
+import { Settings, HardHat, Box, AlertTriangle, LogOut,  Clock, Cctv, SquareDashed } from 'lucide-vue-next';
 import axios from 'axios';
 
 const maquina = ref({
@@ -54,7 +54,13 @@ async function salvarMaquina() {
                         <a href="/config-maquina"><Box /> Config. Máquina</a>
                     </li>
                     <li class="nav-item">
-                        <a href="/alertas"><AlertTriangle /> Alerta</a>
+                        <a href="/cadastro-camera"><Cctv /> Cadastro de Câmera</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/calibrar-zonas"><SquareDashed /> Calibração de Zonas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/alertas"><AlertTriangle /> Alertas</a>
                     </li>
                 </ul>
             </div>

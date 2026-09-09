@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { Settings, HardHat, Box, AlertTriangle, LogOut, MapPin, Trash2, Plus} from 'lucide-vue-next';
+import { Settings, HardHat, Box, AlertTriangle, LogOut, MapPin, Trash2, Plus, Cctv, SquareDashed} from 'lucide-vue-next';
 import axios from 'axios';
 import { conectarWebSocket, registrarCallback, removerCallback } from '../services/WebSocket';
 
@@ -45,7 +45,9 @@ async function deletarMaquina(id) {
     try {
         const resposta = await axios.delete(`/api/maquina/${id}`)
 
-        maquinas.value.shift(resposta.data)
+        maquinas.value = maquinas.value.filter(
+            maquina => maquina.id_maquina !== id
+        )    
     } catch (error) {
         console.error("Erro ao deletar maquinas ", maquinas)
     }
@@ -77,7 +79,10 @@ async function deletarEpi(id) {
     try {
         const resposta = await axios.delete(`/api/epi/${id}`)
 
-        epis.value.shift(resposta.data)
+        epis.value = epis.value.filter(
+            epi => epi.id_epi !== id
+        )
+
     } catch (error) {
         console.error("Erro ao deletar maquinas ", epis)
     }
@@ -168,7 +173,13 @@ onUnmounted(() => {
                         <a href="/config-maquina"><Box /> Config. Máquina</a>
                     </li>
                     <li class="nav-item">
-                        <a href="/alertas"><AlertTriangle /> Alerta</a>
+                        <a href="/cadastro-camera"><Cctv /> Cadastro de Câmera</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/calibrar-zonas"><SquareDashed /> Calibração de Zonas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/alertas"><AlertTriangle /> Alertas</a>
                     </li>
                 </ul>
             </div>

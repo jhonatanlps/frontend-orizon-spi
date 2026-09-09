@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Settings, HardHat, Box, AlertTriangle, LogOut } from 'lucide-vue-next';
+import { Settings, HardHat, Box, AlertTriangle, LogOut, Cctv, SquareDashed } from 'lucide-vue-next';
 import axios from 'axios';
 
 const epi = ref({
@@ -51,7 +51,13 @@ async function salvarEpi() {
                         <a href="/config-maquina"><Box /> Config. Máquina</a>
                     </li>
                     <li class="nav-item">
-                        <a href="/alertas"><AlertTriangle /> Alerta</a>
+                        <a href="/cadastro-camera"><Cctv /> Cadastro de Câmera</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/calibrar-zonas"><SquareDashed /> Calibração de Zonas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/alertas"><AlertTriangle /> Alertas</a>
                     </li>
                 </ul>
             </div>

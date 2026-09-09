@@ -1,11 +1,11 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { Settings, Activity, Accessibility, TrendingUp, LogOut, FileText } from 'lucide-vue-next';
+import { Settings, Cctv, LogOut, FileText } from 'lucide-vue-next';
 import GraficoZona from '../components/GraficoZona.vue';
 import GraficoPizza from '../components/GraficoPizza.vue';
 import InfracoesRecentes from '../components/InfracoesRecentes.vue';
 import axios from 'axios';
-import { conectarWebSocket, registrarCallback } from '../services/WebSocket.js';
+import TotalOcorrencias from '../components/TotalOcorrencias.vue';
 
 const qtdOcorrenciasStatus = ref([]);
 const carregando = ref(false)
@@ -67,6 +67,9 @@ onMounted(() => {
                     <li class="nav-item">
                         <a href="/relatorios"><FileText /> Relatórios</a>
                     </li>
+                    <li class="nav-item">
+                        <a href="/cameras"><Cctv /> Câmeras</a>
+                    </li>
                 </ul>
             </div>
 
@@ -84,38 +87,7 @@ onMounted(() => {
             <p class="page-subtitle">Visão geral do sistema de segurança industrial</p>
             </header>
 
-            <!-- METRICS CARDS -->
-            <div class="metrics-grid">
-            <div class="metric-card purple">
-                <div class="metric-icon">
-                <Activity :size="48" :stroke-width="2.5" />
-                </div>
-                <div class="metric-info">
-                <span class="metric-label">Total de ocorrências</span>
-                <span class="metric-value">{{ qtdOcorrenciasBloqueado + qtdOcorrenciasOk }}</span>
-                </div>
-            </div>
-
-            <div class="metric-card cyan">
-                <div class="metric-icon">
-                <Accessibility :size="48" :stroke-width="2.5" />
-                </div>
-                <div class="metric-info">
-                <span class="metric-label">Funcionários Ativos</span>
-                <span class="metric-value">6</span>
-                </div>
-            </div>
-
-            <div class="metric-card green">
-                <div class="metric-icon">
-                <TrendingUp :size="48" :stroke-width="2.5" />
-                </div>
-                <div class="metric-info">
-                <span class="metric-label">Conformidade</span>
-                <span class="metric-value">{{ (((qtdOcorrenciasOk / (qtdOcorrenciasOk + qtdOcorrenciasBloqueado))*100).toFixed(2)) }}%</span>
-                </div>
-            </div>
-            </div>
+            <TotalOcorrencias />
 
             <div class="card-flex">
 

@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { Settings, HardHat, Box, AlertTriangle, LogOut, Clock } from 'lucide-vue-next';
+import { Settings, HardHat, Box, AlertTriangle, LogOut, Clock, Cctv, SquareDashed } from 'lucide-vue-next';
 import axios from 'axios';
 import { conectarWebSocket, registrarCallback, removerCallback } from '../services/WebSocket';
+import InfracoesRecentes from '../components/InfracoesRecentes.vue';
 
 const alertasRecentes = ref([])
 const carregando = ref(false)
@@ -103,8 +104,14 @@ onUnmounted(() => {
                     <li class="nav-item">
                         <a href="/config-maquina"><Box /> Config. Máquina</a>
                     </li>
+                    <li class="nav-item">
+                        <a href="/cadastro-camera"><Cctv /> Cadastro de Câmera</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/calibrar-zonas"><SquareDashed /> Calibração de Zonas</a>
+                    </li>
                     <li class="nav-item active">
-                        <a href="/alertas"><AlertTriangle /> Alerta</a>
+                        <a href="/alertas"><AlertTriangle /> Alertas</a>
                     </li>
                 </ul>
             </div>
@@ -151,7 +158,6 @@ onUnmounted(() => {
                         <div class="alert-machine"><strong>Máquina:</strong> {{ alerta.ocorrencia?.zona?.maquina?.nome }}</div>
                     </div>
                     <div class="alert-actions">
-                        <button @click="resolverAlerta(alerta.id_alerta)" class="btn-resolve">Resolver</button>
                         <div class="alert-time">
                             <Clock :size="14" /> {{ alerta.data_hora }}
                         </div>
