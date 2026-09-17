@@ -1,8 +1,27 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Settings, HardHat, Box, AlertTriangle, LogOut, Cctv, SquareDashed } from 'lucide-vue-next'
+import { 
+  Settings, 
+  HardHat, 
+  Box, 
+  AlertTriangle, 
+  LogOut, 
+  Cctv, 
+  SquareDashed, 
+  Upload, 
+  Undo2, 
+  Check, 
+  Plus, 
+  Trash2, 
+  Send, 
+  Copy, 
+  Download,
+  Info,
+  Sliders,
+  Code
+} from 'lucide-vue-next'
 
-const COLORS = ['#A8FFFF', '#765CFF', '#65E6EE', '#9B8CFF', '#4CC9F0', '#B8A9FF']
+const COLORS = ['#0284c7', '#7c3aed', '#059669', '#d97706', '#dc2626', '#2563eb']
 
 // Referências para elementos do DOM e estados reativos
 const canvasRef = ref(null)
@@ -133,11 +152,11 @@ function redraw() {
 
   // Zona em progresso
   if (currentPoints.value.length > 0) {
-    drawPolygon(currentPoints.value, '#A8FFFF', false, null)
+    drawPolygon(currentPoints.value, '#38bdf8', false, null)
     currentPoints.value.forEach(([x, y]) => {
       ctx.beginPath()
       ctx.arc(x, y, 4, 0, Math.PI * 2)
-      ctx.fillStyle = '#A8FFFF'
+      ctx.fillStyle = '#38bdf8'
       ctx.fill()
     })
   }
@@ -150,10 +169,10 @@ function drawPolygon(pts, color, closed, label) {
   for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1])
   if (closed) ctx.closePath()
   ctx.strokeStyle = color
-  ctx.lineWidth = 2
+  ctx.lineWidth = 2.5
   ctx.stroke()
   if (closed) {
-    ctx.fillStyle = color + '22'
+    ctx.fillStyle = color + '25'
     ctx.fill()
   }
   if (label) {
@@ -181,11 +200,11 @@ async function sendZoneToBackend(index) {
   const apiUrl = apiUrlInput.value.trim()
 
   if (!apiUrl) {
-    sendStatuses.value[index] = { text: 'Preencha a URL da API acima primeiro.', color: 'var(--red)' }
+    sendStatuses.value[index] = { text: 'Preencha a URL da API acima primeiro.', color: '#dc2626' }
     return
   }
   if (!z.id_maquina) {
-    sendStatuses.value[index] = { text: 'Essa zona não tem id_maquina definido.', color: 'var(--red)' }
+    sendStatuses.value[index] = { text: 'Essa zona não tem id_maquina definido.', color: '#dc2626' }
     return
   }
 
@@ -195,7 +214,7 @@ async function sendZoneToBackend(index) {
     epis_obrigatorios: z.epis_obrigatorios
   }
 
-  sendStatuses.value[index] = { text: 'Enviando...', color: 'var(--text-dim)' }
+  sendStatuses.value[index] = { text: 'Enviando...', color: '#64748b' }
 
   try {
     const resp = await fetch(`${apiUrl.replace(/\/$/, '')}/maquina/${z.id_maquina}/zona`, {
@@ -204,12 +223,12 @@ async function sendZoneToBackend(index) {
       body: JSON.stringify(payload)
     })
     if (resp.ok) {
-      sendStatuses.value[index] = { text: `Enviado (status ${resp.status})`, color: 'var(--teal)' }
+      sendStatuses.value[index] = { text: `Enviado (status ${resp.status})`, color: '#16a34a' }
     } else {
-      sendStatuses.value[index] = { text: `Backend respondeu com erro (status ${resp.status})`, color: 'var(--red)' }
+      sendStatuses.value[index] = { text: `Backend respondeu com erro (${resp.status})`, color: '#dc2626' }
     }
   } catch (err) {
-    sendStatuses.value[index] = { text: `Falha de conexão: ${err.message}`, color: 'var(--red)' }
+    sendStatuses.value[index] = { text: `Falha de conexão: ${err.message}`, color: '#dc2626' }
   }
 }
 
@@ -229,551 +248,655 @@ function downloadJson() {
 </script>
 
 <template>
-    <div class="layout-container">
-        <!-- SIDEBAR -->
-        <aside class="sidebar">
-            <div>
-                <div class="sidebar-logo">
-                    <img src="../assets/logo_orizon_branca.png" alt="ORIZON">
-                    <span>Técnico</span>
-                </div>
+  <div class="layout-container">
+    <!-- SIDEBAR MANTIDA INTACTA -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-logo">
+          <img src="../assets/logo_orizon_branca.png" alt="ORIZON">
+          <span>Técnico</span>
+        </div>
 
-                <ul class="nav-menu">
-                    <li class="nav-item">
-                        <a href="/tecnico"><Settings /> Painel</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/cadastro-epi"><HardHat /> Cadastro de Epi</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/config-maquina"><Box /> Config. Máquina</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/cadastro-camera"><Cctv /> Cadastro de Câmera</a>
-                    </li>
-                    <li class="nav-item active">
-                        <a href="/calibrar-zonas"><SquareDashed /> Calibração de Zonas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/alertas"><AlertTriangle /> Alertas</a>
-                    </li>
-                </ul>
-            </div>
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="/tecnico"><Settings /> Painel</a>
+          </li>
+          <li class="nav-item">
+            <a href="/cadastro-epi"><HardHat /> Cadastro de Epi</a>
+          </li>
+          <li class="nav-item">
+            <a href="/config-maquina"><Box /> Config. Máquina</a>
+          </li>
+          <li class="nav-item">
+            <a href="/cadastro-camera"><Cctv /> Cadastro de Câmera</a>
+          </li>
+          <li class="nav-item active">
+            <a href="/calibrar-zonas"><SquareDashed /> Calibração de Zonas</a>
+          </li>
+          <li class="nav-item">
+            <a href="/alertas"><AlertTriangle /> Alertas</a>
+          </li>
+        </ul>
+      </div>
 
-            <div class="sidebar-footer">
-                <a href="/" class="logout-btn">
-                    <LogOut /> Sair
-                </a>
-            </div>
-        </aside>
+      <div class="sidebar-footer">
+        <a href="/" class="logout-btn">
+          <LogOut /> Sair
+        </a>
+      </div>
+    </aside>
 
-        <!-- MAIN CONTENT -->
-        <div v-if="carregando" class="loading-state">Carregando dados do servidor...</div>
-
-        <main v-else class="main-content">
-            <div class="layout">
-                <div class="stage">
-                    <div class="toolbar">
-                        <button class="btn" @click="triggerUpload">Carregar foto da câmera</button>
-                        <input type="file" ref="fileInputRef" @change="handleFileChange" accept="image/*" style="display:none">
-                        <button class="btn" @click="undoPoint" :disabled="currentPoints.length === 0">Desfazer ponto</button>
-                        <button class="btn" @click="openSaveForm" :disabled="currentPoints.length < 3">Fechar polígono</button>
-                        <div class="spacer"></div>
-                        <span class="count" v-if="currentPoints.length > 0">{{ currentPoints.length }} ponto(s)</span>
-                    </div>
-
-                    <div id="stageWrap">
-                        <div class="stage-empty" v-if="!img">
-                            <div class="empty-content">
-                                <div class="empty-kicker">Orizon / visão computacional</div>
-                                <div class="empty-title">Nenhuma imagem carregada</div>
-                                <span class="hint">Carregue um frame da câmera e marque os pontos da área onde o EPI deve ser detectado. Os pontos são convertidos automaticamente para a resolução original.</span>
-                            </div>
-                        </div>
-                        <canvas ref="canvasRef" @click="handleCanvasClick" :style="{ display: img ? 'block' : 'none' }"></canvas>
-                    </div>
-
-                    <div class="save-form" v-if="showForm">
-                        <div class="field">
-                            <label>Nome da zona (usado no script Python)</label>
-                            <input type="text" v-model="zoneName" placeholder="ex: MAQUINA_A">
-                        </div>
-                        <div class="field">
-                            <label>ID da máquina no backend</label>
-                            <input type="text" v-model="zoneMachineId" placeholder="ex: 1">
-                        </div>
-                        <div class="field">
-                            <label>EPIs obrigatórios (separados por vírgula)</label>
-                            <input type="text" v-model="zoneEpis" placeholder="ex: epi_capacete, epi_oculos">
-                        </div>
-                        <div class="row2">
-                            <button class="btn btn-primary" @click="saveZone">Salvar zona</button>
-                            <button class="btn" @click="cancelZone">Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="side">
-                    <div class="side-section">
-                        <div class="section-title"><h2>Configuração</h2><small>01</small></div>
-                        <div class="field">
-                            <label>URL da API</label>
-                            <input type="text" v-model="apiUrlInput" placeholder="https://webhook.site/seu-id">
-                        </div>
-                    </div>
-
-                    <div class="side-section">
-                        <div class="section-title"><h2>Zonas definidas</h2><small>{{ String(zones.length).padStart(2, '0') }}</small></div>
-                        <div id="zoneList">
-                            <div class="zone-card" v-for="(z, i) in zones" :key="i">
-                                <div class="row">
-                                    <span class="name"><span class="swatch" :style="{ background: z.color }"></span>{{ z.nome }}</span>
-                                    <button class="remove" title="remover" @click="removeZone(i)">×</button>
-                                </div>
-                                <div class="meta">{{ z.pontos.length }} pontos · ref {{ naturalW }}×{{ naturalH }}px · id_maquina: {{ z.id_maquina ?? '—' }}</div>
-                                <div class="epis">{{ z.epis_obrigatorios.length ? 'EPIs: ' + z.epis_obrigatorios.join(', ') : 'Sem EPI obrigatório definido' }}</div>
-                                <div class="row2" style="margin-top:4px;">
-                                    <button class="btn send-zone" style="flex:1;" @click="sendZoneToBackend(i)">Enviar pro backend</button>
-                                </div>
-                                <div class="send-status" :style="{ color: sendStatuses[i]?.color }" style="font-size:11px; font-family: var(--mono);">
-                                    {{ sendStatuses[i]?.text }}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="empty-hint" v-if="zones.length === 0">Nenhuma zona salva ainda.</div>
-                    </div>
-
-                    <div class="side-section">
-                        <div class="section-title"><h2>Saída para o backend</h2><small>03</small></div>
-                        <pre id="jsonOut">{{ jsonOutput }}</pre>
-                        <div class="row2" style="display:flex; gap:8px; margin-top:8px;">
-                            <button class="btn" @click="copyJson">Copiar</button>
-                            <button class="btn btn-primary" @click="downloadJson">Baixar .json</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+    <!-- ÁREA PRINCIPAL - DESIGN CLARO ORIZON -->
+    <div v-if="carregando" class="loading-state">
+      <div class="spinner"></div>
+      <p>Carregando dados do servidor...</p>
     </div>
+
+    <main v-else class="main-content">
+      <!-- Header Clean -->
+      <header class="content-header">
+        <div class="header-title">
+          <h1>Calibração de Zonas</h1>
+          <p>Delimite áreas de verificação de EPIs em cada câmera</p>
+        </div>
+      </header>
+
+      <div class="layout-grid">
+        <!-- ÁREA DO CANVAS (STAGE) -->
+        <section class="stage-card">
+          <!-- Toolbar -->
+          <div class="toolbar">
+            <button class="btn btn-primary" @click="triggerUpload">
+              <Upload :size="16" /> Carregar Foto
+            </button>
+            <input type="file" ref="fileInputRef" @change="handleFileChange" accept="image/*" style="display:none">
+
+            <button class="btn btn-secondary" @click="undoPoint" :disabled="currentPoints.length === 0">
+              <Undo2 :size="16" /> Desfazer Ponto
+            </button>
+
+            <button class="btn btn-outline" @click="openSaveForm" :disabled="currentPoints.length < 3">
+              <Check :size="16" /> Fechar Polígono
+            </button>
+
+            <div class="spacer"></div>
+
+            <span class="count-badge" v-if="currentPoints.length > 0">
+              <span class="dot"></span>
+              {{ currentPoints.length }} ponto(s)
+            </span>
+          </div>
+
+          <!-- Palco de Marcação -->
+          <div id="stageWrap">
+            <div class="stage-empty" v-if="!img">
+              <div class="empty-content">
+                <div class="empty-icon-wrapper">
+                  <SquareDashed :size="32" />
+                </div>
+                <h3>Nenhuma imagem carregada</h3>
+                <p class="hint">
+                  Carregue um frame da câmera para delimitar visualmente os pontos onde a verificação de EPI deve ocorrer.
+                </p>
+              </div>
+            </div>
+            <canvas ref="canvasRef" @click="handleCanvasClick" :style="{ display: img ? 'block' : 'none' }"></canvas>
+          </div>
+
+          <!-- Formulário para Salvar Zona -->
+          <div class="save-form" v-if="showForm">
+            <div class="form-header">
+              <Plus :size="18" />
+              <span>Nova Zona Definida</span>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Nome da Zona</label>
+                <input type="text" v-model="zoneName" placeholder="ex: MAQUINA_A">
+              </div>
+              <div class="field">
+                <label>ID da Máquina</label>
+                <input type="text" v-model="zoneMachineId" placeholder="ex: 1">
+              </div>
+              <div class="field full-width">
+                <label>EPIs Obrigatórios (separados por vírgula)</label>
+                <input type="text" v-model="zoneEpis" placeholder="ex: epi_capacete, epi_oculos">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" @click="saveZone">Salvar Zona</button>
+              <button class="btn btn-secondary" @click="cancelZone">Cancelar</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAINEL LATERAL DE CONFIGURAÇÃO E SAÍDA -->
+        <aside class="side-panel">
+          <!-- Configuração da API -->
+          <div class="panel-card">
+            <div class="card-title">
+              <Sliders :size="16" />
+              <h2>Configuração</h2>
+            </div>
+            <div class="field">
+              <label>URL da API (Backend)</label>
+              <input type="text" v-model="apiUrlInput" placeholder="https://webhook.site/seu-id">
+            </div>
+          </div>
+
+          <!-- Zonas Definidas -->
+          <div class="panel-card">
+            <div class="card-title">
+              <SquareDashed :size="16" />
+              <h2>Zonas Definidas</h2>
+              <span class="counter-pill">{{ String(zones.length).padStart(2, '0') }}</span>
+            </div>
+
+            <div id="zoneList" v-if="zones.length > 0">
+              <div class="zone-card" v-for="(z, i) in zones" :key="i">
+                <div class="zone-header">
+                  <span class="name">
+                    <span class="swatch" :style="{ background: z.color }"></span>
+                    {{ z.nome }}
+                  </span>
+                  <button class="remove-btn" title="Remover" @click="removeZone(i)">
+                    <Trash2 :size="14" />
+                  </button>
+                </div>
+
+                <div class="meta-info">
+                  {{ z.pontos.length }} pontos · ref {{ naturalW }}×{{ naturalH }}px · máquina: <b>{{ z.id_maquina ?? '—' }}</b>
+                </div>
+
+                <div class="epis-list">
+                  {{ z.epis_obrigatorios.length ? 'EPIs: ' + z.epis_obrigatorios.join(', ') : 'Sem EPI obrigatório definido' }}
+                </div>
+
+                <button class="btn btn-send" @click="sendZoneToBackend(i)">
+                  <Send :size="13" /> Enviar para Backend
+                </button>
+
+                <div class="send-status" v-if="sendStatuses[i]" :style="{ color: sendStatuses[i]?.color }">
+                  {{ sendStatuses[i]?.text }}
+                </div>
+              </div>
+            </div>
+
+            <div class="empty-hint" v-else>
+              <Info :size="16" />
+              Nenhuma zona salva até o momento.
+            </div>
+          </div>
+
+          <!-- Saída JSON -->
+          <div class="panel-card">
+            <div class="card-title">
+              <Code :size="16" />
+              <h2>Saída JSON</h2>
+            </div>
+            <pre id="jsonOut">{{ jsonOutput }}</pre>
+            <div class="card-actions">
+              <button class="btn btn-secondary" @click="copyJson">
+                <Copy :size="14" /> Copiar
+              </button>
+              <button class="btn btn-primary" @click="downloadJson">
+                <Download :size="14" /> Baixar .json
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
 </template>
 
 <style scoped>
-/* Layout Principal e Sidebar (Integrados) */
+/* Fundo Limpo Orizon */
 .layout-container {
   display: flex;
   min-height: 100vh;
-  background-color: var(--bg-deep, #050a12);
-  color: var(--text, #e2e8f0);
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .main-content {
   flex: 1;
+  padding: 32px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  gap: 24px;
 }
 
-.loading-state {
-  padding: 40px;
-  text-align: center;
-  color: var(--muted, #94a3b8);
+/* Header */
+.content-header {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-/* Estilos de Componentes e Etapas Existentes */
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 18px;
+.header-title h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
 }
 
-.brand-logo {
-  width: 116px;
-  height: 54px;
-  object-fit: contain;
-  object-position: center;
+.header-title p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
 }
 
-.brand-divider {
-  width: 1px;
-  height: 28px;
-  background: var(--line-strong, #334155);
-}
-
-.brand-copy { display: grid; gap: 2px; }
-
-.brand-copy strong {
-  font-size: 13px;
-  font-weight: 650;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.brand-copy span {
-  color: var(--muted, #94a3b8);
-  font-size: 11px;
-}
-
-.header-status {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: var(--muted, #94a3b8);
-  font-size: 11px;
-  font-family: var(--mono, monospace);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--cyan, #65e6ee);
-  box-shadow: 0 0 14px rgba(168,255,255,.75);
-}
-
-.layout {
+/* Layout Grid */
+.layout-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 350px;
-  min-height: calc(100vh - 0px);
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
 }
 
-.stage {
-  min-width: 0;
-  padding: 28px;
+/* Card do Canvas (Stage) */
+.stage-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  border-right: 1px solid var(--line, #1e293b);
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .toolbar {
   display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-.toolbar .spacer { flex: 1; }
+.spacer { flex: 1; }
 
-.toolbar .count {
-  font-family: var(--mono, monospace);
-  font-size: 11px;
-  color: var(--cyan, #65e6ee);
-  padding-left: 10px;
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.775rem;
+  font-weight: 600;
 }
 
+.count-badge .dot {
+  width: 6px;
+  height: 6px;
+  background-color: #0284c7;
+  border-radius: 50%;
+}
+
+/* Botões */
 .btn {
-  appearance: none;
-  font-size: 12px;
-  padding: 9px 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 14px;
   border-radius: 8px;
-  border: 1px solid var(--line-strong, #334155);
-  background: var(--panel, #111827);
-  color: var(--text, #e2e8f0);
   cursor: pointer;
-  transition: .18s ease;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
 }
-
-.btn:hover {
-  background: var(--panel-hover, #1f2937);
-  border-color: #4a6285;
-  transform: translateY(-1px);
-}
-
-.btn:active { transform: translateY(0); }
 
 .btn:disabled {
-  opacity: .32;
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--cyan, #65e6ee), #7ddcff);
-  border-color: transparent;
-  color: #07121e;
-  font-weight: 750;
+  background-color: #0284c7;
+  color: #ffffff;
 }
 
-.btn-primary:hover {
-  border-color: transparent;
-  box-shadow: 0 7px 24px rgba(101,230,238,.16);
+.btn-primary:hover:not(:disabled) {
+  background-color: #0369a1;
 }
 
-.btn-danger { color: var(--danger, #ef4444); }
+.btn-secondary {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
 
+.btn-secondary:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-outline {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* Palco de Exibição / Canvas */
 #stageWrap {
-  min-height: 0;
-  flex: 1;
+  width: 100%;
   display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #0f172a;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 440px;
 }
 
 .stage-empty {
-  flex: 1;
-  min-height: 480px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line, #1e293b);
-  position: relative;
-  overflow: hidden;
-  background:
-    linear-gradient(rgba(101,230,238,.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(101,230,238,.035) 1px, transparent 1px),
-    var(--bg-deep, #050a12);
-  background-size: 34px 34px;
+  padding: 40px 20px;
   text-align: center;
-}
-
-.stage-empty::before,
-.stage-empty::after {
-  content: "";
-  position: absolute;
-  width: 110px;
-  height: 110px;
-  border: 1px solid rgba(168,255,255,.13);
-}
-
-.stage-empty::before {
-  top: 28px;
-  left: 28px;
-  border-right: 0;
-  border-bottom: 0;
-}
-
-.stage-empty::after {
-  right: 28px;
-  bottom: 28px;
-  border-left: 0;
-  border-top: 0;
+  color: #94a3b8;
 }
 
 .empty-content {
-  position: relative;
-  z-index: 1;
-  max-width: 430px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 360px;
 }
 
-.empty-kicker {
-  color: var(--cyan, #65e6ee);
-  font: 10px var(--mono, monospace);
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  margin-bottom: 14px;
+.empty-icon-wrapper {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  color: #38bdf8;
 }
 
-.empty-title {
-  font-size: 21px;
-  font-weight: 650;
-  margin-bottom: 9px;
+.empty-content h3 {
+  color: #f8fafc;
+  margin: 0 0 6px 0;
+  font-size: 1rem;
 }
 
-.stage-empty span.hint {
-  display: block;
-  color: var(--muted, #94a3b8);
-  font-size: 12px;
-  line-height: 1.7;
+.empty-content .hint {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #64748b;
+  margin: 0;
 }
 
 canvas {
-  max-width: 100%;
-  width: 100%;
-  height: auto;
-  align-self: flex-start;
-  border: 1px solid var(--line-strong, #334155);
-  background: #050a12;
-  cursor: crosshair;
   display: block;
+  max-width: 100%;
+  height: auto;
+  cursor: crosshair;
 }
 
-.side {
-  background: rgba(8,14,25,.72);
-  padding: 25px 20px;
+/* Formulário para Salvar Zona */
+.save-form {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  overflow-y: auto;
+  gap: 12px;
 }
 
-.side-section {
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--line, #1e293b);
-}
-
-.side-section:last-child {
-  border-bottom: 0;
-}
-
-.side h2 {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .15em;
-  color: var(--muted-2, #64748b);
-  font-weight: 700;
-  margin: 0 0 13px;
-}
-
-.section-title {
+.form-header {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #0f172a;
 }
 
-.section-title small {
-  color: var(--muted-2, #64748b);
-  font: 10px var(--mono, monospace);
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
+.form-grid .full-width {
+  grid-column: span 2;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Inputs */
 .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 11px;
 }
 
-.field:last-child { margin-bottom: 0; }
-
 .field label {
-  font-size: 11px;
-  color: var(--muted, #94a3b8);
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: #475569;
 }
 
 .field input {
-  width: 100%;
-  font-size: 12px;
-  background: var(--panel-soft, #0f172a);
-  border: 1px solid var(--line, #1e293b);
-  color: var(--text, #e2e8f0);
-  padding: 10px 11px;
-  border-radius: 7px;
-  transition: .18s ease;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  outline: none;
+  transition: all 0.2s ease;
 }
-
-.field input::placeholder { color: #4f6078; }
 
 .field input:focus {
-  outline: none;
-  border-color: var(--cyan-strong, #38bdf8);
-  box-shadow: 0 0 0 3px rgba(101,230,238,.07);
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
 }
 
+/* Painel Lateral */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f172a;
+}
+
+.card-title h2 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0;
+  flex: 1;
+}
+
+.counter-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: #f1f5f9;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* Cards de Zona */
 .zone-card {
-  background: linear-gradient(145deg, rgba(16,26,43,.95), rgba(11,20,34,.95));
-  border: 1px solid var(--line, #1e293b);
-  border-radius: 10px;
-  padding: 13px;
-  margin-bottom: 9px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.zone-card:hover { border-color: var(--line-strong, #334155); }
-
-.zone-card .row {
+.zone-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.zone-card .swatch {
-  width: 8px;
-  height: 8px;
+.zone-header .name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   display: inline-block;
-  margin-right: 8px;
-  box-shadow: 0 0 10px currentColor;
 }
 
-.zone-card .name {
-  font-weight: 650;
-  font-size: 12px;
-}
-
-.zone-card .meta {
-  font-size: 10px;
-  color: var(--muted-2, #64748b);
-  font-family: var(--mono, monospace);
-  line-height: 1.5;
-}
-
-.zone-card .epis {
-  font-size: 11px;
-  color: var(--muted, #94a3b8);
-  line-height: 1.45;
-}
-
-.zone-card .remove {
-  background: none;
+.remove-btn {
+  background: transparent;
   border: none;
-  color: var(--muted-2, #64748b);
+  color: #94a3b8;
   cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
-  padding: 0 2px;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
 }
 
-.zone-card .remove:hover { color: var(--danger, #ef4444); }
+.remove-btn:hover {
+  color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.meta-info {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.epis-list {
+  font-size: 0.775rem;
+  color: #334155;
+  background-color: #ffffff;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #f1f5f9;
+}
+
+.btn-send {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0284c7;
+  font-size: 0.775rem;
+  padding: 6px 10px;
+  justify-content: center;
+}
+
+.btn-send:hover {
+  background-color: #f0f9ff;
+  border-color: #38bdf8;
+}
+
+.send-status {
+  font-size: 0.725rem;
+  font-weight: 500;
+}
 
 .empty-hint {
-  font-size: 11px;
-  color: var(--muted-2, #64748b);
-  padding: 12px 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #64748b;
+  padding: 8px 0;
 }
 
+/* Código JSON */
 pre#jsonOut {
   margin: 0;
-  background: #070c15;
-  border: 1px solid var(--line, #1e293b);
-  border-radius: 9px;
-  padding: 13px;
-  font-family: var(--mono, monospace);
-  font-size: 10px;
-  line-height: 1.55;
-  color: #b9e8e7;
-  max-height: 220px;
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #38bdf8;
+  max-height: 200px;
   overflow: auto;
   white-space: pre-wrap;
-  word-break: break-word;
+  word-break: break-all;
 }
 
-.save-form {
-  background:
-    linear-gradient(135deg, rgba(101,230,238,.06), transparent 50%),
-    var(--panel, #111827);
-  border: 1px solid #2c6170;
-  border-radius: 10px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.save-form .row2,
-.side .row2 {
+.card-actions {
   display: flex;
   gap: 8px;
 }
 
-.save-form .row2 .btn { flex: 1; }
-
-.send-status { min-height: 14px; }
-
-@media (max-width: 900px) {
-  .layout-container { flex-direction: column; }
-  .sidebar { width: 100%; flex-direction: row; align-items: center; padding: 12px 20px; }
-  .sidebar-logo { margin-bottom: 0; }
-  .nav-menu { flex-direction: row; gap: 4px; }
-  .sidebar-footer { border-top: none; padding-top: 0; }
-  .layout { grid-template-columns: 1fr; }
-  .stage { border-right: 0; border-bottom: 1px solid var(--line, #1e293b); }
-  .side { min-height: auto; }
+.card-actions .btn {
+  flex: 1;
 }
 
-@media (max-width: 600px) {
-  .brand-divider, .brand-copy, .header-status { display: none; }
-  .stage { padding: 16px; }
-  .stage-empty { min-height: 390px; }
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: #64748b;
+  width: 100%;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #0284c7;
+  border-radius: 50%;
+  animation: spin 0.8s infinite linear;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
