@@ -155,17 +155,6 @@ function handleLogin() {
                 <button class="btn-gerar">Gerar relatório</button>
             </div>
 
-            <!-- Treinamentos -->
-            <div class="report-card">
-                <div class="report-header">
-                <div class="report-icon-container icon-teal">
-                    <BookOpen :size="28" :stroke-width="2.5" />
-                </div>
-                <h3 class="report-title">Relatório de<br>Treinamentos</h3>
-                </div>
-                <p class="report-desc">Registro de treinamentos realizados e pendentes</p>
-                <button class="btn-gerar">Gerar relatório</button>
-            </div>
             </section>
 
             <!-- RELATÓRIOS RECENTES -->
