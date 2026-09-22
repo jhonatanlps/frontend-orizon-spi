@@ -77,7 +77,7 @@ onMounted(() => {
         </div>
         <div class="metric-info">
         <span class="metric-label">Conformidade</span>
-        <span class="metric-value">{{ (((qtdOcorrenciasOk / (qtdOcorrenciasOk + qtdOcorrenciasBloqueado))*100).toFixed(2)) }}%</span>
+        <span class="metric-value">{{ (qtdOcorrenciasOk + qtdOcorrenciasBloqueado) > 0 ? (((qtdOcorrenciasOk / (qtdOcorrenciasOk + qtdOcorrenciasBloqueado))*100).toFixed(2))+"%" : "Nenhuma ocorrência" }}</span>
         </div>
     </div>
     </div>
