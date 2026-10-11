@@ -105,8 +105,12 @@ async function fetchCameras() {
     cameras.value = response.data || []
     
     if (cameras.value.length > 0) {
-      const first = cameras.value[0]
-      selectedCameraId.value = first.id || first.id_camera
+      // CORREÇÃO: Mantém a câmera selecionada caso exista após o refresh
+      const exists = cameras.value.find(c => (c.id || c.id_camera) === selectedCameraId.value)
+      if (!exists) {
+        const first = cameras.value[0]
+        selectedCameraId.value = first.id || first.id_camera
+      }
     }
   } catch (err) {
     console.error("Erro ao carregar lista de câmeras:", err)
@@ -319,6 +323,17 @@ function onVideoLoaded() {
 function renderFrame() {
   if (!isCameraActive.value || !ctx || !canvasRef.value || !videoRef.value) return
 
+  // CORREÇÃO: HLS geralmente dispara loadedmetadata antes da resolução real estar disponível.
+  // Essa checagem atualiza o canvas dinamicamente se o HLS mudar a resolução.
+  if (videoRef.value.videoWidth > 0 && (naturalW !== videoRef.value.videoWidth || naturalH !== videoRef.value.videoHeight)) {
+    naturalW = videoRef.value.videoWidth
+    naturalH = videoRef.value.videoHeight
+    const maxW = 760
+    displayScale = Math.min(1, maxW / naturalW)
+    canvasRef.value.width = naturalW * displayScale
+    canvasRef.value.height = naturalH * displayScale
+  }
+
   ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
   ctx.drawImage(videoRef.value, 0, 0, canvasRef.value.width, canvasRef.value.height)
 
@@ -393,28 +408,42 @@ async function saveZone() {
   const nomeFinal = zoneName.value.trim() || `ZONA_${filteredZones.value.length + 1}`
   const idMaquina = zoneMachineId.value
 
+  // CORREÇÃO: Pega a resolução com certeza absoluta no momento do clique de salvamento
+  const finalVideoW = videoRef.value?.videoWidth || naturalW || 1280
+  const finalVideoH = videoRef.value?.videoHeight || naturalH || 720
+
   const pontosOriginais = currentPoints.value.map(([x, y]) => [
     Math.round(x / displayScale),
     Math.round(y / displayScale)
   ])
 
-  // Payload enviado ao Spring Boot (câmera vira null se for webcam)
+  // CORREÇÃO: Payload enviado ao Spring Boot agora envia os atributos 'id' e 'id_XXX' juntos.
+  // Isso garante que o Spring Boot encontre a variável de mapeamento independente do nome.
   const payload = {
     nome: nomeFinal,
     resolucao: {
-      largura: naturalW || 1280,
-      altura: naturalH || 720
+      largura: finalVideoW,
+      altura: finalVideoH
     },
     poligonos: pontosOriginais.map(([x, y]) => ({
       x: x,
       y: y
     })),
     camera: (!isWebcamActive.value && selectedCameraId.value) 
-      ? { id_camera: Number(selectedCameraId.value) } 
+      ? { 
+          id: Number(selectedCameraId.value), 
+          id_camera: Number(selectedCameraId.value) 
+        } 
       : null,
-    maquina: idMaquina ? { id_maquina: Number(idMaquina) } : null,
+    maquina: idMaquina 
+      ? { 
+          id: Number(idMaquina), 
+          id_maquina: Number(idMaquina) 
+        } 
+      : null,
     epi: zoneSelectedEpis.value.map(id => ({
       epi: {
+        id: Number(id),
         id_epi: Number(id)
       }
     }))
